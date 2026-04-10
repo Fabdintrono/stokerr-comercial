@@ -1,0 +1,86 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ============================================
+   STOCKER - Premium Dark UI Design System
+   Inspired by: Supabase, Linear, Vercel
+   ============================================ */
+
+@layer base {
+  :root {
+    /* Dark Theme - Default */
+    --background: 0 0% 3.5%;           /* #09090b - zinc-950 */
+    --foreground: 0 0% 98%;             /* #fafafa */
+    
+    --card: 0 0% 5.5%;                  /* #0e0e10 */
+    --card-foreground: 0 0% 98%;
+    
+    --popover: 0 0% 7%;                /* #111113 */
+    --popover-foreground: 0 0% 98%;
+    
+    --primary: 160 84% 45%;             /* emerald-500 */
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 0 0% 10%;              /* #1a1a1a */
+    --secondary-foreground: 0 0% 98%;
+    
+    --muted: 0 0% 12%;                  /* #1f1f1f */
+    --muted-foreground: 240 5% 64.9%;
+    
+    --accent: 0 0% 14%;                 /* #242424 */
+    --accent-foreground: 0 0% 98%;
+    
+    --destructive: 0 72.2% 50.6%;      /* #dc2626 */
+    --destructive-foreground: 0 0% 98%;
+    
+    --border: 240 5% 14%;               /* zinc-800 */
+    --input: 240 5% 14%;
+    --ring: 160 84% 45%;                /* emerald-500 */
+    
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    border-color: hsl(var(--border));
+  }
+  
+  html, body {
+    height: 100%;
+    min-height: 100%;
+  }
+  
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-feature-settings: "rlig" 1, "calt" 1;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: hsl(var(--muted-foreground) / 0.3);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: hsl(var(--muted-foreground) / 0.5);
+}
+
+/* Utility Classes */
+.text-balance {
+  text-wrap: balance;
+}

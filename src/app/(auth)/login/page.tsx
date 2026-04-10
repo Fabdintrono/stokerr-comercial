@@ -1,0 +1,117 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+
+export default function LoginPage() {
+  const router = useRouter();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    try {
+      const result = await signIn("credentials", {
+        email,
+        password,
+        redirect: false,
+      });
+
+      if (result?.error) {
+        setError("Credenciales inválidas");
+        setLoading(false);
+        return;
+      }
+
+      // Obtener info del usuario para redirigir
+      const res = await fetch("/api/auth/session");
+      const session = await res.json();
+
+      if (session?.user) {
+        // Redirigir según el rol
+        if (session.user.role === "SUPER_ADMIN") {
+          router.push("/clients");
+        } else {
+          router.push("/select-business");
+        }
+      }
+    } catch (err) {
+      setError("Error al iniciar sesión");
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Card className="w-full max-w-md bg-zinc-900/50 border-zinc-800 backdrop-blur-xl">
+      <CardHeader className="space-y-1 text-center">
+        <CardTitle className="text-2xl font-bold text-white">Iniciar Sesión</CardTitle>
+        <CardDescription className="text-zinc-400">
+          Ingresa tus credenciales para continuar
+        </CardDescription>
+      </CardHeader>
+      
+      <form onSubmit={handleSubmit}>
+        <CardContent className="space-y-4">
+          {error && (
+            <div className="p-3 text-sm text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg">
+              {error}
+            </div>
+          )}
+          
+          <div className="space-y-2">
+            <Label htmlFor="email" className="text-zinc-300">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="tu@email.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="bg-zinc-800/50 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-emerald-500 focus:ring-emerald-500/20"
+              required
+            />
+          </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="password" className="text-zinc-300">Contraseña</Label>
+            <Input
+              id="password"
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="bg-zinc-800/50 border-zinc-700 text-white placeholder:text-zinc-500 focus:border-emerald-500 focus:ring-emerald-500/20"
+              required
+            />
+          </div>
+        </CardContent>
+        
+        <CardFooter className="flex flex-col gap-4">
+          <Button
+            type="submit"
+            className="w-full bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/25"
+            disabled={loading}
+          >
+            {loading ? "Ingresando..." : "Ingresar"}
+          </Button>
+          
+          <p className="text-sm text-zinc-500 text-center">
+            ¿No tienes cuenta?{" "}
+            <a href="/register" className="text-emerald-400 hover:text-emerald-300">
+              Regístrate
+            </a>
+          </p>
+        </CardFooter>
+      </form>
+    </Card>
+  );
+}

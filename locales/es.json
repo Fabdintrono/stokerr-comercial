@@ -1,0 +1,62 @@
+{
+  "common": {
+    "appName": "Stocker",
+    "loading": "Cargando...",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "create": "Crear",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "actions": "Acciones",
+    "status": "Estado",
+    "date": "Fecha",
+    "name": "Nombre",
+    "description": "Descripción"
+  },
+  "auth": {
+    "login": "Iniciar Sesión",
+    "logout": "Cerrar Sesión",
+    "register": "Registrarse",
+    "email": "Correo Electrónico",
+    "password": "Contraseña",
+    "confirmPassword": "Confirmar Contraseña",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "noAccount": "¿No tienes cuenta?",
+    "hasAccount": "¿Ya tienes cuenta?",
+    "loginTitle": "Inicia sesión en tu cuenta",
+    "registerTitle": "Crear nueva cuenta",
+    "loginSuccess": "Sesión iniciada correctamente",
+    "loginError": "Credenciales inválidas",
+    "registerSuccess": "Cuenta creada correctamente",
+    "registerError": "Error al crear la cuenta",
+    "orContinueWith": "o continúa con"
+  },
+  "nav": {
+    "dashboard": "Panel",
+    "inventory": "Inventario",
+    "products": "Productos",
+    "orders": "Pedidos",
+    "pos": "Punto de Venta",
+    "reports": "Reportes",
+    "settings": "Configuración",
+    "users": "Usuarios",
+    "restaurants": "Restaurantes"
+  },
+  "dashboard": {
+    "title": "Panel de Control",
+    "welcome": "Bienvenido",
+    "totalProducts": "Total Productos",
+    "lowStock": "Stock Bajo",
+    "pendingOrders": "Pedidos Pendientes",
+    "todaySales": "Ventas Hoy",
+    "recentActivity": "Actividad Reciente",
+    "quickActions": "Acciones Rápidas"
+  },
+  "roles": {
+    "admin": "Administrador",
+    "manager": "Gerente",
+    "employee": "Empleado"
+  }
+}

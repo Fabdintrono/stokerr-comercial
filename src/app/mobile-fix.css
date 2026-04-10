@@ -1,0 +1,19 @@
+/* Mobile-first responsive fix */
+@layer utilities {
+  /* Force mobile sidebar to be hidden by default */
+  .sidebar-mobile-hidden {
+    transform: translateX(-100%);
+  }
+  
+  /* Show on desktop */
+  @media (min-width: 768px) {
+    .sidebar-mobile-hidden {
+      transform: translateX(0);
+    }
+  }
+  
+  /* Mobile sidebar visible when open */
+  .sidebar-mobile-visible {
+    transform: translateX(0);
+  }
+}
