@@ -7,13 +7,12 @@ import { z } from 'zod';
 // Schema de validación para crear location
 const createLocationSchema = z.object({
   name: z.string().min(2, 'Nombre debe tener al menos 2 caracteres'),
-  slug: z.string().min(1).max(50).regex(/^[a-z0-9-]+$/).optional(),
   type: z.enum(['WAREHOUSE', 'RESTAURANT']),
-  address: z.string().min(5, 'Dirección requerida'),
-  city: z.string().min(2, 'Ciudad requerida'),
-  postalCode: z.string().min(4, 'Código postal requerido'),
-  phone: z.string().optional(),
-  email: z.string().email('Email inválido').optional(),
+  address: z.string().optional().default(''),
+  city: z.string().optional().default(''),
+  postalCode: z.string().optional().default(''),
+  phone: z.string().optional().default(''),
+  email: z.string().optional().default(''),
 });
 
 // GET /api/locations - Listar locations del negocio
@@ -28,8 +27,8 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const businessId = request.cookies.get('businessId')?.value;
-    
+    const businessId = request.headers.get('X-Business-Id') || request.cookies.get('businessId')?.value;
+
     if (!businessId) {
       return NextResponse.json(
         { error: 'No hay negocio seleccionado' },
@@ -43,7 +42,7 @@ export async function GET(request: NextRequest) {
 
     const where: any = { businessId };
     if (type) where.type = type;
-    if (active !== null) where.active = active === 'true';
+    if (active !== null) where.isActive = active === 'true';
 
     const locations = await prisma.location.findMany({
       where,
@@ -81,8 +80,8 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const businessId = request.cookies.get('businessId')?.value;
-    
+    const businessId = request.headers.get('X-Business-Id') || request.cookies.get('businessId')?.value;
+
     if (!businessId) {
       return NextResponse.json(
         { error: 'No hay negocio seleccionado' },
@@ -90,23 +89,37 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Check maxRestaurants limit
+    const business = await prisma.business.findUnique({ where: { id: businessId } });
+    if (!business) {
+      return NextResponse.json({ error: 'Negocio no encontrado' }, { status: 404 });
+    }
+
     const body = await request.json();
     const validated = createLocationSchema.parse(body);
 
-    // Generar slug si no se proporciona
-    const slug = validated.slug || validated.name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '');
+    if (validated.type === 'RESTAURANT') {
+      const currentCount = await prisma.location.count({
+        where: { businessId, type: 'RESTAURANT', isActive: true },
+      });
+      if (currentCount >= business.maxRestaurants) {
+        return NextResponse.json(
+          { error: `Limite de ${business.maxRestaurants} locales alcanzado. Actualiza tu plan.` },
+          { status: 400 }
+        );
+      }
+    }
 
     const location = await prisma.location.create({
       data: {
         businessId,
         name: validated.name,
-        slug,
         type: validated.type,
-        address: validated.address,
-        city: validated.city,
-        postalCode: validated.postalCode,
-        phone: validated.phone,
-        email: validated.email,
+        ...(validated.address && { address: validated.address }),
+        ...(validated.city && { city: validated.city }),
+        ...(validated.postalCode && { postalCode: validated.postalCode }),
+        ...(validated.phone && { phone: validated.phone }),
+        ...(validated.email && { email: validated.email }),
       },
     });
 

@@ -39,7 +39,7 @@ async function main() {
       name: 'Restaurante Demo Lda',
       slug: 'restaurante-demo',
       plan: 'GROWTH',
-      isActive: true,
+      active: true,
       maxRestaurants: 10,
       maxUsers: 20,
     },
@@ -55,9 +55,10 @@ async function main() {
       email: 'admin@stocker.pt',
       name: 'Admin Principal',
       password: hashedPassword,
+      role: 'SUPER_ADMIN',
       phone: '+351 912 345 678',
       language: 'pt-PT',
-      isActive: true,
+      active: true,
     },
   });
 
@@ -66,9 +67,10 @@ async function main() {
       email: 'warehouse@stocker.pt',
       name: 'João Silva',
       password: await bcrypt.hash('manager123', 10),
+      role: 'WAREHOUSE_MANAGER',
       phone: '+351 923 456 789',
       language: 'pt-PT',
-      isActive: true,
+      active: true,
     },
   });
 
@@ -77,9 +79,10 @@ async function main() {
       email: 'rest1@stocker.pt',
       name: 'Maria Santos',
       password: await bcrypt.hash('manager123', 10),
+      role: 'RESTAURANT_MANAGER',
       phone: '+351 934 567 890',
       language: 'pt-PT',
-      isActive: true,
+      active: true,
     },
   });
 
@@ -91,7 +94,7 @@ async function main() {
       role: 'RESTAURANT_MANAGER',
       phone: '+351 945 678 901',
       language: 'pt-PT',
-      isActive: true,
+      active: true,
     },
   });
 
@@ -100,9 +103,10 @@ async function main() {
       email: 'cashier@stocker.pt',
       name: 'Ana Ferreira',
       password: await bcrypt.hash('cashier123', 10),
+      role: 'CASHIER',
       phone: '+351 956 789 012',
       language: 'pt-PT',
-      isActive: true,
+      active: true,
     },
   });
 
@@ -158,7 +162,6 @@ async function main() {
     data: {
       businessId: business.id,
       name: 'Armazém Central',
-      slug: 'warehouse',
       type: 'WAREHOUSE',
       address: 'Rua do Armazém, 100',
       city: 'Lisboa',
@@ -173,7 +176,6 @@ async function main() {
     data: {
       businessId: business.id,
       name: 'Restaurante Chiado',
-      slug: 'chiado',
       type: 'RESTAURANT',
       address: 'Rua Garrett, 50',
       city: 'Lisboa',
@@ -188,7 +190,6 @@ async function main() {
     data: {
       businessId: business.id,
       name: 'Restaurante Bairro Alto',
-      slug: 'bairro-alto',
       type: 'RESTAURANT',
       address: 'Rua da Atalaia, 25',
       city: 'Lisboa',
@@ -209,8 +210,6 @@ async function main() {
     data: {
       userId: admin.id,
       locationId: warehouse.id,
-      role: 'WAREHOUSE_MANAGER',
-      isPrimary: true,
     },
   });
 
@@ -219,8 +218,6 @@ async function main() {
     data: {
       userId: warehouseManager.id,
       locationId: warehouse.id,
-      role: 'WAREHOUSE_MANAGER',
-      isPrimary: true,
     },
   });
 
@@ -229,8 +226,6 @@ async function main() {
     data: {
       userId: restaurantManager1.id,
       locationId: restaurant1.id,
-      role: 'RESTAURANT_MANAGER',
-      isPrimary: true,
     },
   });
 
@@ -239,8 +234,6 @@ async function main() {
     data: {
       userId: restaurantManager2.id,
       locationId: restaurant2.id,
-      role: 'RESTAURANT_MANAGER',
-      isPrimary: true,
     },
   });
 
@@ -249,8 +242,6 @@ async function main() {
     data: {
       userId: cashier.id,
       locationId: restaurant1.id,
-      role: 'CASHIER',
-      isPrimary: true,
     },
   });
 
@@ -496,9 +487,6 @@ async function main() {
         productId: product.id,
         locationId: warehouse.id,
         quantity: Math.floor(Math.random() * 50) + 20,
-        avgCost: Math.floor(Math.random() * 10) + 5,
-        minLevel: product.minStock,
-        maxLevel: product.maxStock || null,
       },
     });
 
@@ -508,9 +496,6 @@ async function main() {
         productId: product.id,
         locationId: restaurant1.id,
         quantity: Math.floor(Math.random() * 20) + 5,
-        avgCost: Math.floor(Math.random() * 10) + 5,
-        minLevel: Math.floor(product.minStock / 2),
-        maxLevel: product.maxStock ? Math.floor(product.maxStock / 2) : null,
       },
     });
 
@@ -520,9 +505,6 @@ async function main() {
         productId: product.id,
         locationId: restaurant2.id,
         quantity: Math.floor(Math.random() * 20) + 5,
-        avgCost: Math.floor(Math.random() * 10) + 5,
-        minLevel: Math.floor(product.minStock / 2),
-        maxLevel: product.maxStock ? Math.floor(product.maxStock / 2) : null,
       },
     });
   }
@@ -583,7 +565,151 @@ async function main() {
     },
   });
 
+  const supplier3 = await prisma.supplier.create({
+    data: {
+      name: 'Vinhos do Douro SA',
+      vatNumber: '500345678',
+      email: 'encomendas@douro.pt',
+      phone: '+351 254 321 654',
+      address: 'Estrada do Douro, 300',
+      city: 'Porto',
+      businessId: business.id,
+      isActive: true,
+    },
+  });
+
+  const supplier4 = await prisma.supplier.create({
+    data: {
+      name: 'Padaria Alentejana',
+      vatNumber: '500456789',
+      email: 'padaria@alentejo.pt',
+      phone: '+351 266 111 222',
+      address: 'Rua do Pão, 10',
+      city: 'Évora',
+      businessId: business.id,
+      isActive: true,
+    },
+  });
+
   console.log('✅ Proveedores creados');
+
+  // Crear facturas de compra
+  console.log('🧾 Creando facturas de compra...');
+
+  // Factura 1 - Distribuidora Central (PAID)
+  const invoice1 = await prisma.purchaseInvoice.create({
+    data: {
+      number: 'FAC-2026-001',
+      supplierId: (await prisma.supplier.findFirst({ where: { vatNumber: '500123456' } }))!.id,
+      businessId: business.id,
+      issueDate: new Date('2026-04-01'),
+      dueDate: new Date('2026-05-01'),
+      status: 'PAID',
+      notes: 'Compra mensual de carnes y vegetales',
+    },
+  });
+
+  const inv1Items = await prisma.invoiceLineItem.createMany({
+    data: [
+      { invoiceId: invoice1.id, productId: products[3].id, quantity: 20, unitPrice: 12.50, vatRate: 6, totalAmount: 20 * 12.50 * 1.06 },
+      { invoiceId: invoice1.id, productId: products[5].id, quantity: 30, unitPrice: 2.80, vatRate: 6, totalAmount: 30 * 2.80 * 1.06 },
+      { invoiceId: invoice1.id, productId: products[6].id, quantity: 50, unitPrice: 1.20, vatRate: 6, totalAmount: 50 * 1.20 * 1.06 },
+    ],
+  });
+
+  await prisma.purchaseInvoice.update({
+    where: { id: invoice1.id },
+    data: {
+      totalAmount: 20 * 12.50 + 30 * 2.80 + 50 * 1.20,
+      totalVat: (20 * 12.50 + 30 * 2.80 + 50 * 1.20) * 0.06,
+    },
+  });
+
+  // Factura 2 - Produtos Frescos do Sul (RECEIVED)
+  const invoice2 = await prisma.purchaseInvoice.create({
+    data: {
+      number: 'FAC-2026-002',
+      supplierId: (await prisma.supplier.findFirst({ where: { vatNumber: '500234567' } }))!.id,
+      businessId: business.id,
+      issueDate: new Date('2026-04-05'),
+      dueDate: new Date('2026-05-05'),
+      status: 'RECEIVED',
+      notes: 'Frutas frescas semanais',
+    },
+  });
+
+  await prisma.invoiceLineItem.createMany({
+    data: [
+      { invoiceId: invoice2.id, productId: products[9].id, quantity: 40, unitPrice: 1.50, vatRate: 6, totalAmount: 40 * 1.50 * 1.06 },
+      { invoiceId: invoice2.id, productId: products[10].id, quantity: 35, unitPrice: 1.80, vatRate: 6, totalAmount: 35 * 1.80 * 1.06 },
+    ],
+  });
+
+  await prisma.purchaseInvoice.update({
+    where: { id: invoice2.id },
+    data: {
+      totalAmount: 40 * 1.50 + 35 * 1.80,
+      totalVat: (40 * 1.50 + 35 * 1.80) * 0.06,
+    },
+  });
+
+  // Factura 3 - Vinhos do Douro (DRAFT)
+  const invoice3 = await prisma.purchaseInvoice.create({
+    data: {
+      number: 'FAC-2026-003',
+      supplierId: supplier3.id,
+      businessId: business.id,
+      issueDate: new Date('2026-04-10'),
+      dueDate: new Date('2026-05-10'),
+      status: 'DRAFT',
+      notes: 'Vinhos e cervejas para o mês',
+    },
+  });
+
+  await prisma.invoiceLineItem.createMany({
+    data: [
+      { invoiceId: invoice3.id, productId: products[0].id, quantity: 50, unitPrice: 8.90, vatRate: 23, totalAmount: 50 * 8.90 * 1.23 },
+      { invoiceId: invoice3.id, productId: products[1].id, quantity: 100, unitPrice: 1.20, vatRate: 23, totalAmount: 100 * 1.20 * 1.23 },
+      { invoiceId: invoice3.id, productId: products[2].id, quantity: 200, unitPrice: 0.40, vatRate: 6, totalAmount: 200 * 0.40 * 1.06 },
+    ],
+  });
+
+  await prisma.purchaseInvoice.update({
+    where: { id: invoice3.id },
+    data: {
+      totalAmount: 50 * 8.90 + 100 * 1.20 + 200 * 0.40,
+      totalVat: 50 * 8.90 * 0.23 + 100 * 1.20 * 0.23 + 200 * 0.40 * 0.06,
+    },
+  });
+
+  // Factura 4 - Padaria (PAID)
+  const invoice4 = await prisma.purchaseInvoice.create({
+    data: {
+      number: 'FAC-2026-004',
+      supplierId: supplier4.id,
+      businessId: business.id,
+      issueDate: new Date('2026-04-08'),
+      dueDate: new Date('2026-05-08'),
+      status: 'PAID',
+    },
+  });
+
+  await prisma.invoiceLineItem.createMany({
+    data: [
+      { invoiceId: invoice4.id, productId: products[11].id, quantity: 80, unitPrice: 1.50, vatRate: 6, totalAmount: 80 * 1.50 * 1.06 },
+      { invoiceId: invoice4.id, productId: products[12].id, quantity: 120, unitPrice: 0.80, vatRate: 6, totalAmount: 120 * 0.80 * 1.06 },
+    ],
+  });
+
+  await prisma.purchaseInvoice.update({
+    where: { id: invoice4.id },
+    data: {
+      totalAmount: 80 * 1.50 + 120 * 0.80,
+      totalVat: (80 * 1.50 + 120 * 0.80) * 0.06,
+    },
+  });
+
+  console.log('✅ Facturas de compra creadas');
 
   // Crear configuración inicial
   console.log('⚙️ Creando configuración...');
@@ -591,7 +717,6 @@ async function main() {
     data: {
       key: 'company_name',
       value: 'Stocker - Sistema de Gestão',
-      description: 'Nome da empresa',
     },
   });
 
@@ -599,7 +724,6 @@ async function main() {
     data: {
       key: 'default_vat_rate',
       value: 'THIRTEEN',
-      description: 'Taxa de IVA padrão (13% - restaurantes)',
     },
   });
 
@@ -607,7 +731,6 @@ async function main() {
     data: {
       key: 'currency',
       value: 'EUR',
-      description: 'Moeda do sistema',
     },
   });
 

@@ -5,12 +5,12 @@ import { z } from 'zod';
 // Schema de validación para actualizar location
 const updateLocationSchema = z.object({
   name: z.string().min(2).optional(),
-  address: z.string().min(5).optional(),
-  city: z.string().min(2).optional(),
-  postalCode: z.string().min(4).optional(),
+  address: z.string().optional(),
+  city: z.string().optional(),
+  postalCode: z.string().optional(),
   phone: z.string().optional(),
-  email: z.string().email().optional(),
-  active: z.boolean().optional(),
+  email: z.string().optional(),
+  isActive: z.boolean().optional(),
 });
 
 // GET /api/locations/[id] - Obtener location por ID

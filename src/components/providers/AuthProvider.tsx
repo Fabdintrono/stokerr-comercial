@@ -7,6 +7,7 @@ import {
   useEffect,
   ReactNode,
 } from "react";
+import { useRouter } from "next/navigation";
 import { SessionProvider, signIn, signOut } from "next-auth/react";
 
 import { Role } from "@/types/auth";
@@ -34,6 +35,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // Inner provider that uses session state
 function AuthProviderInner({ children }: { children: ReactNode }) {
+  const router = useRouter();
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -117,6 +119,7 @@ function AuthProviderInner({ children }: { children: ReactNode }) {
   const logout = async () => {
     await signOut({ redirect: false });
     setUser(null);
+    router.push("/login");
   };
 
   return (

@@ -84,8 +84,6 @@ export async function POST(request: NextRequest) {
             productId: data.productId,
             locationId: data.locationId,
             quantity: 0,
-            avgCost: 0,
-            minLevel: 0,
           },
         });
       }
@@ -110,10 +108,7 @@ export async function POST(request: NextRequest) {
       // Actualizar inventario
       const updatedInventory = await tx.inventory.update({
         where: { id: inventory.id },
-        data: {
-          quantity: newQuantity,
-          lastRestock: new Date(),
-        },
+        data: { quantity: newQuantity },
       });
 
       // Crear movimiento
@@ -175,7 +170,7 @@ export async function GET(request: NextRequest) {
 
     // Obtener locations del negocio
     const locations = await prisma.location.findMany({
-      where: { businessId, active: true },
+      where: { businessId, isActive: true },
       select: { id: true },
     });
 

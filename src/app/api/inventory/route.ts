@@ -33,7 +33,7 @@ export async function GET(request: NextRequest) {
     const locations = await prisma.location.findMany({
       where: {
         businessId,
-        active: true,
+        isActive: true,
       },
       select: { id: true },
     });

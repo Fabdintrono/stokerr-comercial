@@ -7,9 +7,8 @@ import { z } from 'zod';
 const createCategorySchema = z.object({
   name: z.string().min(1).max(100),
   description: z.string().optional(),
-  icon: z.string().optional(),
-  color: z.string().optional(),
-  order: z.number().int().min(0).optional(),
+  parentId: z.string().optional(),
+  showInPos: z.boolean().optional(),
 });
 
 // GET /api/categories - Listar todas las categorías
@@ -34,15 +33,19 @@ export async function GET(request: NextRequest) {
       );
     }
 
+    const { searchParams } = new URL(request.url);
+    const posOnly = searchParams.get('posOnly') === 'true';
+
     const categories = await prisma.category.findMany({
-      where: {
-        businessId,
-        active: true,
+      where: { businessId, ...(posOnly ? { showInPos: true } : {}) },
+      orderBy: { name: 'asc' },
+      include: {
+        children: {
+          orderBy: { name: 'asc' },
+          include: { _count: { select: { products: true } } },
+        },
+        _count: { select: { products: true } },
       },
-      orderBy: [
-        { order: 'asc' },
-        { name: 'asc' },
-      ],
     });
 
     return NextResponse.json({ categories });
@@ -85,9 +88,8 @@ export async function POST(request: NextRequest) {
         businessId,
         name: data.name,
         description: data.description,
-        icon: data.icon,
-        color: data.color,
-        order: data.order || 0,
+        parentId: data.parentId || null,
+        showInPos: data.showInPos ?? false,
       },
     });
 

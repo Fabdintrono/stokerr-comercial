@@ -111,7 +111,7 @@ export async function POST(request: NextRequest) {
       where: {
         id: data.supplierId,
         businessId,
-        active: true,
+        isActive: true,
       },
     });
 
@@ -128,7 +128,7 @@ export async function POST(request: NextRequest) {
       where: {
         id: { in: productIds },
         businessId,
-        active: true,
+        isActive: true,
       },
       select: {
         id: true,
@@ -147,7 +147,7 @@ export async function POST(request: NextRequest) {
       where: {
         businessId,
         type: 'WAREHOUSE',
-        active: true,
+        isActive: true,
       },
       select: { id: true },
     });
@@ -160,7 +160,7 @@ export async function POST(request: NextRequest) {
       const anyLocation = await prisma.location.findFirst({
         where: {
           businessId,
-          active: true,
+          isActive: true,
         },
         select: { id: true },
       });

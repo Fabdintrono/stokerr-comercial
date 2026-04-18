@@ -1,0 +1,116 @@
+import { NextRequest, NextResponse } from 'next/server';
+import { prisma } from '@/lib/prisma';
+import { z } from 'zod';
+
+const createOrderSchema = z.object({
+  locationId: z.string(),
+  tableId: z.string().optional(),
+  userId: z.string(),
+  notes: z.string().optional(),
+  items: z.array(z.object({
+    productId: z.string(),
+    quantity: z.number().min(0.01),
+    unitPrice: z.number().min(0),
+  })).min(1),
+});
+
+// GET /api/orders - List orders for a location
+export async function GET(request: NextRequest) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const locationId = searchParams.get('locationId');
+    const status = searchParams.get('status');
+    const date = searchParams.get('date'); // YYYY-MM-DD
+
+    if (!locationId) {
+      return NextResponse.json({ error: 'locationId requerido' }, { status: 400 });
+    }
+
+    const where: any = { locationId };
+    if (status) where.status = status;
+    if (date) {
+      const start = new Date(date);
+      const end = new Date(date);
+      end.setDate(end.getDate() + 1);
+      where.createdAt = { gte: start, lt: end };
+    }
+
+    const orders = await prisma.order.findMany({
+      where,
+      include: {
+        table: { select: { number: true } },
+        user: { select: { name: true } },
+        items: {
+          include: { product: { select: { name: true, unit: true } } },
+        },
+        payments: true,
+      },
+      orderBy: { createdAt: 'desc' },
+      take: 100,
+    });
+
+    return NextResponse.json({ data: orders });
+  } catch (error) {
+    console.error('Error fetching orders:', error);
+    return NextResponse.json({ error: 'Error al obtener pedidos' }, { status: 500 });
+  }
+}
+
+// POST /api/orders - Create order
+export async function POST(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const validated = createOrderSchema.parse(body);
+
+    // Generate order number
+    const today = new Date();
+    const datePrefix = today.toISOString().slice(0, 10).replace(/-/g, '');
+    const count = await prisma.order.count({
+      where: {
+        locationId: validated.locationId,
+        createdAt: {
+          gte: new Date(today.getFullYear(), today.getMonth(), today.getDate()),
+        },
+      },
+    });
+    const number = `P-${datePrefix}-${String(count + 1).padStart(3, '0')}`;
+
+    const totalAmount = validated.items.reduce(
+      (sum, item) => sum + item.quantity * item.unitPrice,
+      0
+    );
+
+    const order = await prisma.order.create({
+      data: {
+        number,
+        locationId: validated.locationId,
+        tableId: validated.tableId,
+        userId: validated.userId,
+        notes: validated.notes,
+        totalAmount,
+        items: {
+          create: validated.items.map((item) => ({
+            productId: item.productId,
+            quantity: item.quantity,
+            unitPrice: item.unitPrice,
+            totalPrice: item.quantity * item.unitPrice,
+          })),
+        },
+      },
+      include: {
+        table: { select: { number: true } },
+        items: {
+          include: { product: { select: { name: true } } },
+        },
+      },
+    });
+
+    return NextResponse.json({ data: order }, { status: 201 });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json({ error: 'Datos inválidos', details: error.issues }, { status: 400 });
+    }
+    console.error('Error creating order:', error);
+    return NextResponse.json({ error: 'Error al crear pedido' }, { status: 500 });
+  }
+}

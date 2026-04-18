@@ -2,14 +2,23 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { useAuth } from "@/components/providers/AuthProvider";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
+function getHomeUrl(role: string): string {
+  if (role === "SUPER_ADMIN")       return "/super-admin/clients";
+  if (role === "RESTAURANT_MANAGER") return "/restaurant";
+  if (role === "CASHIER")           return "/pos";
+  if (role === "WAITER")            return "/waiter";
+  return "/business/select-business";
+}
+
 export default function LoginPage() {
   const router = useRouter();
+  const { login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -21,31 +30,23 @@ export default function LoginPage() {
     setError("");
 
     try {
-      const result = await signIn("credentials", {
-        email,
-        password,
-        redirect: false,
-      });
+      // useAuth().login() calls signIn AND updates user state in the context
+      const result = await login(email, password);
 
-      if (result?.error) {
-        setError("Credenciales inválidas");
+      if (!result.success) {
+        setError(result.error || "Credenciales inválidas");
         setLoading(false);
         return;
       }
 
-      // Obtener info del usuario para redirigir
+      // Fetch session to get role for redirect (user state is now set in context)
       const res = await fetch("/api/auth/session");
       const session = await res.json();
 
-      if (session?.user) {
-        // Redirigir según el rol
-        if (session.user.role === "SUPER_ADMIN") {
-          router.push("/clients");
-        } else {
-          router.push("/select-business");
-        }
+      if (session?.user?.role) {
+        router.push(getHomeUrl(session.user.role));
       }
-    } catch (err) {
+    } catch {
       setError("Error al iniciar sesión");
       setLoading(false);
     }
@@ -59,7 +60,7 @@ export default function LoginPage() {
           Ingresa tus credenciales para continuar
         </CardDescription>
       </CardHeader>
-      
+
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           {error && (
@@ -67,7 +68,7 @@ export default function LoginPage() {
               {error}
             </div>
           )}
-          
+
           <div className="space-y-2">
             <Label htmlFor="email" className="text-zinc-300">Email</Label>
             <Input
@@ -80,7 +81,7 @@ export default function LoginPage() {
               required
             />
           </div>
-          
+
           <div className="space-y-2">
             <Label htmlFor="password" className="text-zinc-300">Contraseña</Label>
             <Input
@@ -94,7 +95,7 @@ export default function LoginPage() {
             />
           </div>
         </CardContent>
-        
+
         <CardFooter className="flex flex-col gap-4">
           <Button
             type="submit"
@@ -103,7 +104,7 @@ export default function LoginPage() {
           >
             {loading ? "Ingresando..." : "Ingresar"}
           </Button>
-          
+
           <p className="text-sm text-zinc-500 text-center">
             ¿No tienes cuenta?{" "}
             <a href="/register" className="text-emerald-400 hover:text-emerald-300">

@@ -1,0 +1,1066 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stocker POS — Mockup</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0a0a0a; color: #fff; font-family: system-ui, sans-serif; height: 100vh; overflow: hidden; display: flex; flex-direction: column; user-select: none; }
+
+  /* TOP BAR */
+  .topbar {
+    height: 56px; background: #111; border-bottom: 1px solid #222;
+    display: flex; align-items: center; padding: 0 16px; gap: 16px; flex-shrink: 0;
+  }
+  .topbar .logo { font-size: 18px; font-weight: 800; color: #34d399; letter-spacing: -0.5px; }
+  .topbar .divider { width: 1px; height: 24px; background: #333; }
+  .topbar .table-selector {
+    display: flex; align-items: center; gap: 8px; background: #1a1a1a;
+    border: 1px solid #333; border-radius: 8px; padding: 6px 14px; cursor: pointer;
+    font-size: 14px; font-weight: 600; transition: all 0.15s;
+  }
+  .topbar .table-selector:hover { background: #222; border-color: #34d399; }
+  .topbar .table-selector .dot { width: 8px; height: 8px; border-radius: 50%; background: #34d399; }
+  .topbar .table-selector .dot.empty { background: #555; }
+  .topbar .clock { font-size: 22px; font-weight: 700; color: #fff; font-variant-numeric: tabular-nums; }
+  .topbar .cashier { margin-left: auto; display: flex; align-items: center; gap: 8px; font-size: 13px; color: #888; }
+  .topbar .cashier .avatar { width: 32px; height: 32px; background: #34d399; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; color: #000; }
+  .topbar .caja-badge { background: #052e16; border: 1px solid #166534; border-radius: 6px; padding: 3px 10px; font-size: 11px; color: #34d399; font-weight: 600; }
+
+  /* MAIN AREA */
+  .main { flex: 1; display: flex; overflow: hidden; }
+
+  /* LEFT — PRODUCTS */
+  .products-panel {
+    width: 60%; display: flex; flex-direction: column; border-right: 1px solid #1e1e1e;
+  }
+
+  /* Categories */
+  .categories {
+    display: flex; gap: 6px; padding: 10px 12px; background: #111; border-bottom: 1px solid #1e1e1e;
+    overflow-x: auto; flex-shrink: 0;
+  }
+  .categories::-webkit-scrollbar { height: 3px; }
+  .categories::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+  .cat-btn {
+    padding: 8px 16px; border-radius: 8px; font-size: 13px; font-weight: 600;
+    background: #1a1a1a; border: 1px solid #2a2a2a; color: #888; cursor: pointer;
+    white-space: nowrap; transition: all 0.15s; flex-shrink: 0;
+  }
+  .cat-btn:hover { background: #222; color: #fff; }
+  .cat-btn.active { background: #052e16; border-color: #34d399; color: #34d399; }
+
+  /* Search */
+  .search-bar { padding: 8px 12px; background: #0f0f0f; border-bottom: 1px solid #1e1e1e; flex-shrink: 0; }
+  .search-bar input {
+    width: 100%; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px;
+    padding: 8px 14px; color: #fff; font-size: 14px; outline: none;
+  }
+  .search-bar input:focus { border-color: #34d399; }
+  .search-bar input::placeholder { color: #555; }
+
+  /* Product grid */
+  .products-grid {
+    flex: 1; overflow-y: auto; padding: 10px 12px;
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; align-content: start;
+  }
+  .products-grid::-webkit-scrollbar { width: 4px; }
+  .products-grid::-webkit-scrollbar-thumb { background: #333; border-radius: 2px; }
+  .product-card {
+    background: #141414; border: 1px solid #222; border-radius: 10px;
+    padding: 14px 10px; cursor: pointer; transition: all 0.12s;
+    display: flex; flex-direction: column; gap: 6px; min-height: 90px;
+  }
+  .product-card:hover { background: #1a1a1a; border-color: #34d399; transform: scale(1.02); }
+  .product-card:active { transform: scale(0.98); }
+  .product-card .name { font-size: 13px; font-weight: 600; color: #fff; line-height: 1.3; }
+  .product-card .price { font-size: 16px; font-weight: 800; color: #34d399; }
+  .product-card .cat-tag { font-size: 10px; color: #555; }
+  .product-card.added { border-color: #34d399; background: #052e16; }
+
+  /* RIGHT — ORDER */
+  .order-panel {
+    width: 40%; display: flex; flex-direction: column; background: #0d0d0d;
+  }
+
+  .order-header {
+    padding: 12px 16px; border-bottom: 1px solid #1e1e1e; display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+  }
+  .order-header .title { font-size: 15px; font-weight: 700; color: #fff; }
+  .order-header .order-num { font-size: 12px; color: #555; font-family: monospace; }
+  .order-header .guests { font-size: 12px; color: #666; display: flex; align-items: center; gap: 4px; }
+
+  .order-items { flex: 1; overflow-y: auto; padding: 8px 12px; }
+  .order-items::-webkit-scrollbar { width: 3px; }
+  .order-items::-webkit-scrollbar-thumb { background: #333; }
+
+  .empty-order {
+    height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 10px; color: #333;
+  }
+  .empty-order svg { width: 48px; height: 48px; }
+  .empty-order p { font-size: 14px; }
+
+  .order-item {
+    display: flex; align-items: center; gap: 8px; padding: 8px 0;
+    border-bottom: 1px solid #181818;
+  }
+  .order-item .item-info { flex: 1; min-width: 0; }
+  .order-item .item-name { font-size: 13px; font-weight: 600; color: #e5e5e5; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .order-item .item-note { font-size: 11px; color: #555; }
+  .order-item .qty-ctrl { display: flex; align-items: center; gap: 0; }
+  .order-item .qty-btn {
+    width: 28px; height: 28px; border-radius: 6px; background: #1e1e1e; border: 1px solid #2a2a2a;
+    color: #fff; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+    font-weight: 700; transition: all 0.1s;
+  }
+  .order-item .qty-btn:hover { background: #252525; }
+  .order-item .qty-btn.minus:hover { background: #2a1515; border-color: #f87171; color: #f87171; }
+  .order-item .qty-btn.plus:hover { background: #052e16; border-color: #34d399; color: #34d399; }
+  .order-item .qty-num { width: 30px; text-align: center; font-size: 14px; font-weight: 700; }
+  .order-item .item-price { font-size: 14px; font-weight: 700; color: #fff; width: 60px; text-align: right; }
+  .order-item .del-btn {
+    width: 26px; height: 26px; border-radius: 5px; background: transparent; border: none;
+    color: #444; cursor: pointer; font-size: 14px; display: flex; align-items: center; justify-content: center;
+    transition: all 0.1s;
+  }
+  .order-item .del-btn:hover { color: #f87171; background: #2a1515; }
+
+  /* Order totals */
+  .order-totals {
+    padding: 10px 16px; border-top: 1px solid #1e1e1e; background: #111; flex-shrink: 0;
+  }
+  .totals-row { display: flex; justify-content: space-between; font-size: 13px; color: #888; padding: 2px 0; }
+  .totals-row.total { font-size: 22px; font-weight: 800; color: #fff; margin-top: 6px; border-top: 1px solid #2a2a2a; padding-top: 8px; }
+  .totals-row.total span:last-child { color: #34d399; }
+
+  /* BOTTOM BAR */
+  .bottombar {
+    height: 72px; background: #111; border-top: 1px solid #222;
+    display: flex; align-items: center; padding: 0 12px; gap: 8px; flex-shrink: 0;
+  }
+  .action-btn {
+    flex: 1; height: 52px; border-radius: 10px; border: 1px solid #2a2a2a;
+    background: #1a1a1a; color: #fff; font-size: 13px; font-weight: 700;
+    cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 8px;
+    transition: all 0.15s; flex-direction: column; gap: 2px;
+  }
+  .action-btn:hover { background: #222; }
+  .action-btn .icon { font-size: 18px; }
+  .action-btn .label { font-size: 11px; font-weight: 600; color: #888; }
+  .action-btn.primary { background: #166534; border-color: #22c55e; }
+  .action-btn.primary:hover { background: #15803d; }
+  .action-btn.primary .label { color: #86efac; }
+  .action-btn.danger { background: #1c0a0a; border-color: #7f1d1d; }
+  .action-btn.danger:hover { background: #2a1515; }
+  .action-btn.danger .label { color: #fca5a5; }
+  .action-btn.warning { background: #1c1505; border-color: #78350f; }
+  .action-btn.warning:hover { background: #2a1e0a; }
+  .action-btn.warning .label { color: #fde68a; }
+  .action-btn.info { background: #0c1a2e; border-color: #1e40af; }
+  .action-btn.info:hover { background: #122140; }
+  .action-btn.info .label { color: #93c5fd; }
+
+  /* TABLES OVERLAY */
+  .overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 100;
+    display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity 0.2s;
+  }
+  .overlay.open { opacity: 1; pointer-events: all; }
+  .overlay-panel {
+    background: #111; border: 1px solid #2a2a2a; border-radius: 16px;
+    width: 720px; max-height: 80vh; display: flex; flex-direction: column;
+    transform: scale(0.95); transition: transform 0.2s;
+  }
+  .overlay.open .overlay-panel { transform: scale(1); }
+  .overlay-header {
+    padding: 16px 20px; border-bottom: 1px solid #222; display: flex; align-items: center; justify-content: space-between;
+  }
+  .overlay-header h2 { font-size: 16px; font-weight: 700; }
+  .overlay-close { background: #1e1e1e; border: 1px solid #333; border-radius: 8px; width: 36px; height: 36px; cursor: pointer; color: #888; font-size: 18px; display: flex; align-items: center; justify-content: center; }
+  .overlay-close:hover { color: #fff; background: #2a2a2a; }
+  .tables-grid { padding: 16px 20px; display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; overflow-y: auto; }
+  .table-card {
+    border-radius: 12px; padding: 16px 12px; cursor: pointer; transition: all 0.15s; border: 2px solid transparent;
+    display: flex; flex-direction: column; gap: 4px;
+  }
+  .table-card.free { background: #141414; border-color: #2a2a2a; }
+  .table-card.free:hover { border-color: #34d399; background: #0a1f14; }
+  .table-card.occupied { background: #0a1f14; border-color: #166534; }
+  .table-card.occupied:hover { border-color: #34d399; }
+  .table-card.selected { border-color: #34d399; background: #052e16; }
+  .table-card .t-num { font-size: 20px; font-weight: 800; }
+  .table-card .t-status { font-size: 11px; font-weight: 600; }
+  .table-card.free .t-num { color: #555; }
+  .table-card.free .t-status { color: #444; }
+  .table-card.occupied .t-num { color: #34d399; }
+  .table-card.occupied .t-status { color: #86efac; }
+  .table-card.selected .t-num { color: #34d399; }
+  .table-card .t-items { font-size: 11px; color: #555; margin-top: 4px; }
+  .table-card.occupied .t-items { color: #86efac; }
+  .table-card .t-total { font-size: 13px; font-weight: 700; color: #34d399; }
+  .table-card .t-time { font-size: 10px; color: #555; }
+
+  /* PAYMENT OVERLAY */
+  .pay-panel {
+    background: #111; border: 1px solid #2a2a2a; border-radius: 16px;
+    width: 480px; display: flex; flex-direction: column;
+  }
+  .pay-header { padding: 16px 20px; border-bottom: 1px solid #222; }
+  .pay-header h2 { font-size: 16px; font-weight: 700; }
+  .pay-amount { padding: 20px; text-align: center; }
+  .pay-amount .label { font-size: 13px; color: #666; }
+  .pay-amount .amount { font-size: 52px; font-weight: 900; color: #34d399; }
+  .pay-methods { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 0 20px 16px; }
+  .method-btn {
+    padding: 14px; border-radius: 10px; border: 2px solid #2a2a2a; background: #141414;
+    cursor: pointer; transition: all 0.15s; display: flex; flex-direction: column; align-items: center; gap: 4px;
+  }
+  .method-btn:hover { border-color: #555; background: #1e1e1e; }
+  .method-btn.selected { border-color: #34d399; background: #052e16; }
+  .method-btn .m-icon { font-size: 24px; }
+  .method-btn .m-label { font-size: 13px; font-weight: 700; }
+  .method-btn .m-sub { font-size: 11px; color: #666; }
+  .method-btn.selected .m-sub { color: #86efac; }
+  .pay-footer { padding: 16px 20px; border-top: 1px solid #222; display: flex; gap: 8px; }
+  .pay-cancel { flex: 1; padding: 14px; border-radius: 10px; background: #1a1a1a; border: 1px solid #2a2a2a; color: #888; cursor: pointer; font-size: 14px; font-weight: 600; }
+  .pay-confirm { flex: 2; padding: 14px; border-radius: 10px; background: #166534; border: 1px solid #22c55e; color: #fff; cursor: pointer; font-size: 15px; font-weight: 700; }
+  .pay-confirm:hover { background: #15803d; }
+
+  /* Notification */
+  .notif {
+    position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%);
+    background: #052e16; border: 1px solid #34d399; border-radius: 10px;
+    padding: 10px 20px; font-size: 13px; font-weight: 600; color: #34d399;
+    z-index: 200; opacity: 0; transition: opacity 0.3s;
+    pointer-events: none;
+  }
+  .notif.show { opacity: 1; }
+
+  /* Discount overlay */
+  .discount-panel {
+    background: #111; border: 1px solid #2a2a2a; border-radius: 16px;
+    width: 380px;
+  }
+  .discount-header { padding: 16px 20px; border-bottom: 1px solid #222; }
+  .discount-header h2 { font-size: 16px; font-weight: 700; }
+  .discount-body { padding: 20px; display: flex; flex-direction: column; gap: 12px; }
+  .discount-row { display: flex; gap: 8px; }
+  .disc-btn {
+    flex: 1; padding: 14px; border-radius: 10px; background: #141414; border: 2px solid #2a2a2a;
+    color: #fff; font-size: 15px; font-weight: 700; cursor: pointer; transition: all 0.15s;
+  }
+  .disc-btn:hover { border-color: #f59e0b; background: #1c1505; color: #f59e0b; }
+  .disc-btn.selected { border-color: #f59e0b; background: #1c1505; color: #f59e0b; }
+  .disc-input { padding: 12px 16px; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 10px; color: #fff; font-size: 16px; width: 100%; outline: none; }
+  .disc-input:focus { border-color: #f59e0b; }
+  .discount-footer { padding: 12px 20px; border-top: 1px solid #222; display: flex; gap: 8px; }
+  .disc-cancel { flex: 1; padding: 12px; border-radius: 10px; background: #1a1a1a; border: 1px solid #2a2a2a; color: #888; cursor: pointer; font-size: 14px; font-weight: 600; }
+  .disc-apply { flex: 2; padding: 12px; border-radius: 10px; background: #78350f; border: 1px solid #f59e0b; color: #fff; cursor: pointer; font-size: 14px; font-weight: 700; }
+  .disc-apply:hover { background: #92400e; }
+
+  .badge { display: inline-flex; align-items: center; justify-content: center; background: #ef4444; color: #fff; border-radius: 50%; width: 18px; height: 18px; font-size: 10px; font-weight: 700; }
+
+  /* Split bill overlay */
+  .split-panel {
+    background: #111; border: 1px solid #2a2a2a; border-radius: 16px;
+    width: 540px; max-height: 85vh; display: flex; flex-direction: column;
+  }
+  .split-header { padding: 16px 20px; border-bottom: 1px solid #222; display: flex; align-items: center; justify-content: space-between; }
+  .split-header h2 { font-size: 16px; font-weight: 700; }
+  .split-body { padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; overflow-y: auto; }
+  .split-modes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .split-mode-btn {
+    padding: 14px 10px; border-radius: 10px; border: 2px solid #2a2a2a; background: #141414;
+    color: #fff; cursor: pointer; transition: all 0.15s; text-align: center;
+  }
+  .split-mode-btn:hover { border-color: #555; }
+  .split-mode-btn.active { border-color: #818cf8; background: #1e1b4b; }
+  .split-mode-btn .sm-icon { font-size: 22px; display: block; margin-bottom: 4px; }
+  .split-mode-btn .sm-label { font-size: 13px; font-weight: 700; }
+  .split-mode-btn .sm-sub { font-size: 11px; color: #666; margin-top: 2px; }
+  .split-mode-btn.active .sm-sub { color: #a5b4fc; }
+  .split-divider { height: 1px; background: #1e1e1e; }
+  /* Equal split */
+  .equal-split { display: flex; flex-direction: column; gap: 10px; }
+  .split-n-row { display: flex; gap: 8px; }
+  .split-n-btn {
+    width: 56px; height: 56px; border-radius: 10px; border: 2px solid #2a2a2a; background: #141414;
+    color: #fff; font-size: 20px; font-weight: 800; cursor: pointer; transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .split-n-btn:hover { border-color: #818cf8; }
+  .split-n-btn.active { border-color: #818cf8; background: #1e1b4b; color: #a5b4fc; }
+  .split-custom { display: flex; align-items: center; gap: 8px; }
+  .split-custom input { flex:1; padding: 10px 14px; background: #1a1a1a; border: 1px solid #2a2a2a; border-radius: 8px; color: #fff; font-size: 16px; outline: none; }
+  .split-custom input:focus { border-color: #818cf8; }
+  .split-parts { display: flex; flex-direction: column; gap: 6px; }
+  .split-part-row {
+    display: flex; align-items: center; gap: 10px; background: #141414; border: 1px solid #222;
+    border-radius: 10px; padding: 10px 14px;
+  }
+  .split-part-row .p-num { width: 28px; height: 28px; background: #818cf8; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; color: #1e1b4b; flex-shrink: 0; }
+  .split-part-row .p-label { flex: 1; font-size: 13px; color: #ccc; }
+  .split-part-row .p-amount { font-size: 18px; font-weight: 800; color: #818cf8; }
+  .split-part-row .p-paid { font-size: 11px; color: #34d399; font-weight: 600; }
+  .pay-part-btn {
+    padding: 8px 14px; border-radius: 8px; background: #1e1b4b; border: 1px solid #818cf8;
+    color: #a5b4fc; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.15s;
+  }
+  .pay-part-btn:hover { background: #2d2a5e; }
+  .pay-part-btn.paid { background: #052e16; border-color: #34d399; color: #34d399; cursor: default; }
+  /* By item split */
+  .item-split { display: flex; flex-direction: column; gap: 6px; }
+  .split-item-row {
+    display: flex; align-items: center; gap: 10px; background: #141414; border: 1px solid #222;
+    border-radius: 10px; padding: 10px 14px; cursor: pointer; transition: all 0.15s;
+  }
+  .split-item-row:hover { border-color: #818cf8; }
+  .split-item-row.assigned { border-color: #818cf8; background: #1e1b4b; }
+  .split-item-row .si-name { flex:1; font-size: 13px; font-weight: 600; }
+  .split-item-row .si-price { font-size: 14px; font-weight: 700; color: #818cf8; }
+  .split-item-row .si-who { font-size: 11px; color: #a5b4fc; }
+  .person-tabs { display: flex; gap: 6px; flex-wrap: wrap; }
+  .person-tab {
+    padding: 6px 14px; border-radius: 20px; border: 1px solid #2a2a2a; background: #141414;
+    color: #888; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.15s;
+  }
+  .person-tab:hover { border-color: #818cf8; color: #a5b4fc; }
+  .person-tab.active { border-color: #818cf8; background: #1e1b4b; color: #a5b4fc; }
+  .split-footer { padding: 14px 20px; border-top: 1px solid #222; display: flex; gap: 8px; }
+  .split-cancel-btn { flex:1; padding: 12px; border-radius: 10px; background: #1a1a1a; border: 1px solid #2a2a2a; color: #888; cursor: pointer; font-size: 14px; font-weight: 600; }
+  .split-confirm-btn { flex:2; padding: 12px; border-radius: 10px; background: #1e1b4b; border: 1px solid #818cf8; color: #a5b4fc; cursor: pointer; font-size: 14px; font-weight: 700; }
+  .split-confirm-btn:hover { background: #2d2a5e; }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="logo">⬡ Stocker</div>
+  <div class="divider"></div>
+  <div class="table-selector" onclick="openTables()">
+    <div class="dot" id="table-dot"></div>
+    <span id="selected-table-name">Mesa 4</span>
+    <span style="color:#555; font-size:11px;">▾</span>
+  </div>
+  <div class="divider"></div>
+  <div class="caja-badge">🟢 Caja abierta · 08:32</div>
+  <div class="clock" id="clock">--:--:--</div>
+  <div class="cashier">
+    <div class="avatar">F</div>
+    <div>
+      <div style="color:#ccc; font-size:13px; font-weight:600;">Fabrizio</div>
+      <div style="font-size:11px;">Cajero</div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- PRODUCTS PANEL -->
+  <div class="products-panel">
+    <!-- Categories -->
+    <div class="categories" id="categories">
+      <button class="cat-btn active" onclick="filterCat(this, 'all')">Todo</button>
+      <button class="cat-btn" onclick="filterCat(this, 'Entrantes')">🥗 Entrantes</button>
+      <button class="cat-btn" onclick="filterCat(this, 'Carnes')">🥩 Carnes</button>
+      <button class="cat-btn" onclick="filterCat(this, 'Pescados')">🐟 Pescados</button>
+      <button class="cat-btn" onclick="filterCat(this, 'Pastas')">🍝 Pastas</button>
+      <button class="cat-btn" onclick="filterCat(this, 'Postres')">🍮 Postres</button>
+      <button class="cat-btn" onclick="filterCat(this, 'Bebidas')">🥤 Bebidas</button>
+      <button class="cat-btn" onclick="filterCat(this, 'Vinos')">🍷 Vinos</button>
+    </div>
+
+    <!-- Search -->
+    <div class="search-bar">
+      <input type="text" placeholder="🔍  Buscar producto..." oninput="filterSearch(this.value)" />
+    </div>
+
+    <!-- Products Grid -->
+    <div class="products-grid" id="products-grid"></div>
+  </div>
+
+  <!-- ORDER PANEL -->
+  <div class="order-panel">
+    <div class="order-header">
+      <div>
+        <div class="title" id="order-title">Mesa 4</div>
+        <div class="order-num">#P-20260416-042</div>
+      </div>
+      <div class="guests">👥 3 comensales</div>
+    </div>
+
+    <div class="order-items" id="order-items">
+      <!-- items rendered by JS -->
+    </div>
+
+    <div class="order-totals" id="order-totals">
+      <div class="totals-row"><span>Subtotal</span><span id="subtotal">€0.00</span></div>
+      <div class="totals-row"><span>IVA (23%)</span><span id="iva">€0.00</span></div>
+      <div class="totals-row"><span id="disc-row" style="display:none; color:#f59e0b;">Descuento</span><span id="disc-val" style="color:#f59e0b;"></span></div>
+      <div class="totals-row total"><span>TOTAL</span><span id="total">€0.00</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM BAR -->
+<div class="bottombar">
+  <button class="action-btn info" onclick="openTables()">
+    <span class="icon">🍽</span>
+    <span class="label">MESAS</span>
+  </button>
+  <button class="action-btn" onclick="showNotif('Nueva comanda creada')">
+    <span class="icon">➕</span>
+    <span class="label">NUEVA COMANDA</span>
+  </button>
+  <button class="action-btn warning" onclick="openDiscount()">
+    <span class="icon">%</span>
+    <span class="label">DESCUENTO</span>
+  </button>
+  <button class="action-btn" onclick="showNotif('Notas añadidas al pedido')">
+    <span class="icon">📝</span>
+    <span class="label">NOTA</span>
+  </button>
+  <button class="action-btn" onclick="showNotif('Ticket impreso')">
+    <span class="icon">🖨</span>
+    <span class="label">IMPRIMIR</span>
+  </button>
+  <button class="action-btn" style="background:#0f172a; border-color:#312e81;" onclick="openSplit()">
+    <span class="icon">✂️</span>
+    <span class="label">DIVIDIR CUENTA</span>
+  </button>
+  <button class="action-btn danger" onclick="clearOrder()">
+    <span class="icon">🗑</span>
+    <span class="label">CANCELAR PEDIDO</span>
+  </button>
+  <button class="action-btn primary" onclick="openPayment()">
+    <span class="icon">💳</span>
+    <span class="label">COBRAR</span>
+  </button>
+</div>
+
+<!-- TABLES OVERLAY -->
+<div class="overlay" id="tables-overlay" onclick="closeTables(event)">
+  <div class="overlay-panel">
+    <div class="overlay-header">
+      <div>
+        <h2>Mesas del Restaurante</h2>
+        <div style="font-size:12px; color:#555; margin-top:2px;">Toca una mesa para cargar su pedido</div>
+      </div>
+      <button class="overlay-close" onclick="closeTables()">✕</button>
+    </div>
+    <div class="tables-grid" id="tables-grid"></div>
+  </div>
+</div>
+
+<!-- PAYMENT OVERLAY -->
+<div class="overlay" id="payment-overlay" onclick="closePayment(event)">
+  <div class="pay-panel">
+    <div class="pay-header">
+      <h2>Cobrar pedido · Mesa 4</h2>
+    </div>
+    <div class="pay-amount">
+      <div class="label">Total a cobrar</div>
+      <div class="amount" id="pay-total">€0.00</div>
+    </div>
+    <div class="pay-methods">
+      <div class="method-btn selected" onclick="selectMethod(this)">
+        <div class="m-icon">💵</div>
+        <div class="m-label">Efectivo</div>
+        <div class="m-sub">Pago en mano</div>
+      </div>
+      <div class="method-btn" onclick="selectMethod(this)">
+        <div class="m-icon">💳</div>
+        <div class="m-label">Tarjeta</div>
+        <div class="m-sub">TPV / Contactless</div>
+      </div>
+      <div class="method-btn" onclick="selectMethod(this)">
+        <div class="m-icon">📱</div>
+        <div class="m-label">MB WAY</div>
+        <div class="m-sub">Transferencia móvil</div>
+      </div>
+      <div class="method-btn" onclick="selectMethod(this)">
+        <div class="m-icon">🏦</div>
+        <div class="m-label">Multibanco</div>
+        <div class="m-sub">Referencia ATM</div>
+      </div>
+    </div>
+    <div class="pay-footer">
+      <button class="pay-cancel" onclick="closePayment()">Cancelar</button>
+      <button class="pay-confirm" onclick="confirmPayment()">✓ Confirmar cobro</button>
+    </div>
+  </div>
+</div>
+
+<!-- DISCOUNT OVERLAY -->
+<div class="overlay" id="discount-overlay" onclick="closeDiscount(event)">
+  <div class="discount-panel">
+    <div class="discount-header">
+      <h2>Aplicar descuento</h2>
+    </div>
+    <div class="discount-body">
+      <div class="discount-row">
+        <button class="disc-btn selected" onclick="selectDisc(this, 5)">5%</button>
+        <button class="disc-btn" onclick="selectDisc(this, 10)">10%</button>
+        <button class="disc-btn" onclick="selectDisc(this, 15)">15%</button>
+        <button class="disc-btn" onclick="selectDisc(this, 20)">20%</button>
+      </div>
+      <div style="font-size:12px; color:#555; text-align:center;">— o introduce un porcentaje —</div>
+      <input type="number" class="disc-input" id="disc-input" min="0" max="100" placeholder="Ej: 7" />
+    </div>
+    <div class="discount-footer">
+      <button class="disc-cancel" onclick="closeDiscount()">Cancelar</button>
+      <button class="disc-apply" onclick="applyDiscount()">Aplicar descuento</button>
+    </div>
+  </div>
+</div>
+
+<!-- SPLIT BILL OVERLAY -->
+<div class="overlay" id="split-overlay" onclick="closeSplit(event)">
+  <div class="split-panel">
+    <div class="split-header">
+      <div>
+        <h2>✂️ Dividir cuenta · Mesa <span id="split-table-num">4</span></h2>
+        <div style="font-size:12px; color:#555; margin-top:2px;">Total: <span id="split-total-label" style="color:#818cf8; font-weight:700;">€0.00</span></div>
+      </div>
+      <button class="overlay-close" onclick="closeSplit()">✕</button>
+    </div>
+    <div class="split-body">
+      <!-- Mode selector -->
+      <div class="split-modes">
+        <div class="split-mode-btn active" id="mode-equal" onclick="setSplitMode('equal')">
+          <span class="sm-icon">⚖️</span>
+          <div class="sm-label">Partes iguales</div>
+          <div class="sm-sub">Divide el total entre N personas</div>
+        </div>
+        <div class="split-mode-btn" id="mode-item" onclick="setSplitMode('item')">
+          <span class="sm-icon">📋</span>
+          <div class="sm-label">Por ítem</div>
+          <div class="sm-sub">Cada uno paga sus productos</div>
+        </div>
+      </div>
+
+      <div class="split-divider"></div>
+
+      <!-- Equal split UI -->
+      <div id="equal-ui" class="equal-split">
+        <div style="font-size:13px; color:#888;">¿En cuántas partes?</div>
+        <div class="split-n-row">
+          <button class="split-n-btn" onclick="setSplitN(2)">2</button>
+          <button class="split-n-btn active" onclick="setSplitN(3)">3</button>
+          <button class="split-n-btn" onclick="setSplitN(4)">4</button>
+          <button class="split-n-btn" onclick="setSplitN(5)">5</button>
+          <div class="split-custom">
+            <input type="number" min="2" max="20" placeholder="Otro" id="split-n-input" oninput="setSplitN(parseInt(this.value)||2)" />
+          </div>
+        </div>
+        <div class="split-parts" id="split-parts"></div>
+      </div>
+
+      <!-- Item split UI -->
+      <div id="item-ui" style="display:none;" class="item-split">
+        <div style="font-size:13px; color:#888;">Selecciona persona y toca los ítems que paga:</div>
+        <div class="person-tabs" id="person-tabs"></div>
+        <div class="split-divider"></div>
+        <div id="item-rows"></div>
+        <div id="item-summary" style="display:flex; flex-direction:column; gap:6px; margin-top:4px;"></div>
+      </div>
+    </div>
+    <div class="split-footer">
+      <button class="split-cancel-btn" onclick="closeSplit()">Cancelar</button>
+      <button class="split-confirm-btn" onclick="confirmSplit()">✓ Procesar división</button>
+    </div>
+  </div>
+</div>
+
+<!-- NOTIFICATION -->
+<div class="notif" id="notif"></div>
+
+<script>
+// ─── DATA ──────────────────────────────────────────
+const products = [
+  { id:1, name:'Ensalada César', price:8.50, cat:'Entrantes' },
+  { id:2, name:'Tabla de ibéricos', price:14.00, cat:'Entrantes' },
+  { id:3, name:'Croquetas caseras', price:7.50, cat:'Entrantes' },
+  { id:4, name:'Gazpacho', price:6.00, cat:'Entrantes' },
+  { id:5, name:'Bife de Vaca', price:24.50, cat:'Carnes' },
+  { id:6, name:'Secreto Ibérico', price:19.00, cat:'Carnes' },
+  { id:7, name:'Entrecot 300g', price:28.00, cat:'Carnes' },
+  { id:8, name:'Pollo a la brasa', price:14.50, cat:'Carnes' },
+  { id:9, name:'Bacalhau à Brás', price:18.00, cat:'Pescados' },
+  { id:10, name:'Dorada a la sal', price:22.00, cat:'Pescados' },
+  { id:11, name:'Tagliatelle carbonara', price:13.00, cat:'Pastas' },
+  { id:12, name:'Penne arrabbiata', price:11.50, cat:'Pastas' },
+  { id:13, name:'Tiramisú', price:6.50, cat:'Postres' },
+  { id:14, name:'Tarta de queso', price:5.50, cat:'Postres' },
+  { id:15, name:'Agua Luso 0.5L', price:1.50, cat:'Bebidas' },
+  { id:16, name:'Coca-Cola', price:2.50, cat:'Bebidas' },
+  { id:17, name:'Cerveza NP', price:2.50, cat:'Bebidas' },
+  { id:18, name:'Sumo de laranja', price:3.50, cat:'Bebidas' },
+  { id:19, name:'Vinho Tinto D.O.C.', price:18.00, cat:'Vinos' },
+  { id:20, name:'Vinho Verde', price:14.00, cat:'Vinos' },
+];
+
+const tables = [
+  { id:1, num:1, status:'free' },
+  { id:2, num:2, status:'occupied', items:3, total:42.50, time:'38min' },
+  { id:3, num:3, status:'occupied', items:5, total:89.00, time:'1h 12min' },
+  { id:4, num:4, status:'occupied', items:4, total:52.00, time:'22min' },
+  { id:5, num:5, status:'free' },
+  { id:6, num:6, status:'free' },
+  { id:7, num:7, status:'occupied', items:2, total:28.00, time:'8min' },
+  { id:8, num:8, status:'free' },
+  { id:9, num:9, status:'occupied', items:6, total:118.50, time:'55min' },
+  { id:10, num:10, status:'free' },
+  { id:11, num:11, status:'free' },
+  { id:12, num:12, status:'occupied', items:3, total:67.00, time:'1h 4min' },
+];
+
+// Pre-loaded order for Mesa 4
+let orderItems = [
+  { id:5, name:'Bife de Vaca', price:24.50, qty:2 },
+  { id:17, name:'Cerveza NP', price:2.50, qty:3 },
+  { id:14, name:'Tarta de queso', price:5.50, qty:2 },
+];
+
+let currentTable = 4;
+let activeCat = 'all';
+let searchVal = '';
+let discount = 5; // %
+let selectedMethod = 0;
+
+// ─── CLOCK ──────────────────────────────────────────
+function updateClock() {
+  const now = new Date();
+  const h = String(now.getHours()).padStart(2,'0');
+  const m = String(now.getMinutes()).padStart(2,'0');
+  const s = String(now.getSeconds()).padStart(2,'0');
+  document.getElementById('clock').textContent = `${h}:${m}:${s}`;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// ─── PRODUCTS ──────────────────────────────────────
+function renderProducts() {
+  const grid = document.getElementById('products-grid');
+  const filtered = products.filter(p => {
+    const catOk = activeCat === 'all' || p.cat === activeCat;
+    const searchOk = !searchVal || p.name.toLowerCase().includes(searchVal.toLowerCase());
+    return catOk && searchOk;
+  });
+  grid.innerHTML = filtered.map(p => {
+    const inOrder = orderItems.find(o => o.id === p.id);
+    return `<div class="product-card ${inOrder ? 'added' : ''}" onclick="addProduct(${p.id})">
+      <div class="cat-tag">${p.cat}</div>
+      <div class="name">${p.name}</div>
+      <div class="price">€${p.price.toFixed(2)}</div>
+      ${inOrder ? `<div style="font-size:10px; color:#34d399;">✓ x${inOrder.qty} en pedido</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function filterCat(btn, cat) {
+  document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  activeCat = cat;
+  renderProducts();
+}
+
+function filterSearch(val) {
+  searchVal = val;
+  renderProducts();
+}
+
+function addProduct(id) {
+  const p = products.find(x => x.id === id);
+  const existing = orderItems.find(x => x.id === id);
+  if (existing) existing.qty++;
+  else orderItems.push({ id: p.id, name: p.name, price: p.price, qty: 1 });
+  renderOrder();
+  renderProducts();
+  showNotif(`${p.name} añadido`);
+}
+
+// ─── ORDER ──────────────────────────────────────────
+function renderOrder() {
+  const container = document.getElementById('order-items');
+
+  if (orderItems.length === 0) {
+    container.innerHTML = `<div class="empty-order">
+      <svg viewBox="0 0 24 24" fill="none" stroke="#333" stroke-width="1.5">
+        <path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+      </svg>
+      <p>Mesa vacía — añade productos</p>
+    </div>`;
+    updateTotals();
+    return;
+  }
+
+  container.innerHTML = orderItems.map((item, i) => `
+    <div class="order-item">
+      <div class="item-info">
+        <div class="item-name">${item.name}</div>
+        <div class="item-note">€${item.price.toFixed(2)} / ud.</div>
+      </div>
+      <div class="qty-ctrl">
+        <button class="qty-btn minus" onclick="changeQty(${i}, -1)">−</button>
+        <span class="qty-num">${item.qty}</span>
+        <button class="qty-btn plus" onclick="changeQty(${i}, 1)">+</button>
+      </div>
+      <div class="item-price">€${(item.price * item.qty).toFixed(2)}</div>
+      <button class="del-btn" onclick="removeItem(${i})">✕</button>
+    </div>
+  `).join('');
+  updateTotals();
+}
+
+function changeQty(i, d) {
+  orderItems[i].qty += d;
+  if (orderItems[i].qty <= 0) orderItems.splice(i, 1);
+  renderOrder();
+  renderProducts();
+}
+
+function removeItem(i) {
+  orderItems.splice(i, 1);
+  renderOrder();
+  renderProducts();
+}
+
+function clearOrder() {
+  if (orderItems.length === 0) return;
+  orderItems = [];
+  renderOrder();
+  renderProducts();
+  showNotif('Pedido cancelado');
+}
+
+function updateTotals() {
+  const sub = orderItems.reduce((s, i) => s + i.price * i.qty, 0);
+  const discAmt = sub * discount / 100;
+  const subAfterDisc = sub - discAmt;
+  const iva = subAfterDisc * 0.23;
+  const total = subAfterDisc + iva;
+
+  document.getElementById('subtotal').textContent = `€${sub.toFixed(2)}`;
+  document.getElementById('iva').textContent = `€${iva.toFixed(2)}`;
+  document.getElementById('total').textContent = `€${total.toFixed(2)}`;
+  document.getElementById('pay-total').textContent = `€${total.toFixed(2)}`;
+
+  const discRow = document.getElementById('disc-row');
+  const discVal = document.getElementById('disc-val');
+  if (discount > 0 && sub > 0) {
+    discRow.style.display = '';
+    discRow.textContent = `Descuento (${discount}%)`;
+    discVal.textContent = `-€${discAmt.toFixed(2)}`;
+  } else {
+    discRow.style.display = 'none';
+  }
+}
+
+// ─── TABLES ──────────────────────────────────────────
+function openTables() {
+  const grid = document.getElementById('tables-grid');
+  grid.innerHTML = tables.map(t => `
+    <div class="table-card ${t.status} ${t.num === currentTable ? 'selected' : ''}" onclick="selectTable(${t.num})">
+      <div class="t-num">Mesa ${t.num}</div>
+      <div class="t-status">${t.status === 'occupied' ? '🟢 Ocupada' : '⚪ Libre'}</div>
+      ${t.status === 'occupied' ? `
+        <div class="t-items">${t.items} items</div>
+        <div class="t-total">€${t.total.toFixed(2)}</div>
+        <div class="t-time">⏱ ${t.time}</div>
+      ` : '<div class="t-items">Sin pedido</div>'}
+    </div>
+  `).join('');
+  document.getElementById('tables-overlay').classList.add('open');
+}
+
+function closeTables(e) {
+  if (!e || !e.target.closest('.overlay-panel')) {
+    document.getElementById('tables-overlay').classList.remove('open');
+  }
+}
+
+function selectTable(num) {
+  currentTable = num;
+  const t = tables.find(x => x.num === num);
+
+  document.getElementById('selected-table-name').textContent = `Mesa ${num}`;
+  document.getElementById('table-dot').className = t.status === 'occupied' ? 'dot' : 'dot empty';
+  document.getElementById('order-title').textContent = `Mesa ${num}`;
+
+  // Load example orders per table
+  if (t.status === 'occupied') {
+    if (num === 2) orderItems = [
+      { id:5, name:'Bife de Vaca', price:24.50, qty:1 },
+      { id:17, name:'Cerveza NP', price:2.50, qty:2 },
+    ];
+    else if (num === 3) orderItems = [
+      { id:2, name:'Tabla de ibéricos', price:14.00, qty:1 },
+      { id:9, name:'Bacalhau à Brás', price:18.00, qty:2 },
+      { id:19, name:'Vinho Tinto D.O.C.', price:18.00, qty:1 },
+      { id:13, name:'Tiramisú', price:6.50, qty:2 },
+    ];
+    else if (num === 4) orderItems = [
+      { id:5, name:'Bife de Vaca', price:24.50, qty:2 },
+      { id:17, name:'Cerveza NP', price:2.50, qty:3 },
+      { id:14, name:'Tarta de queso', price:5.50, qty:2 },
+    ];
+    else orderItems = [{ id:16, name:'Coca-Cola', price:2.50, qty:num }];
+  } else {
+    orderItems = [];
+  }
+  discount = 5;
+  renderOrder();
+  renderProducts();
+  closeTables();
+  showNotif(`Mesa ${num} seleccionada`);
+}
+
+// ─── PAYMENT ──────────────────────────────────────────
+function openPayment() {
+  if (orderItems.length === 0) { showNotif('El pedido está vacío'); return; }
+  document.getElementById('payment-overlay').classList.add('open');
+}
+
+function closePayment(e) {
+  if (!e || !e.target.closest('.pay-panel')) {
+    document.getElementById('payment-overlay').classList.remove('open');
+  }
+}
+
+function selectMethod(el) {
+  document.querySelectorAll('.method-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+}
+
+function confirmPayment() {
+  closePayment();
+  orderItems = [];
+  renderOrder();
+  renderProducts();
+  showNotif('✓ Cobro confirmado — Mesa cerrada');
+  const t = tables.find(x => x.num === currentTable);
+  if (t) t.status = 'free';
+  document.getElementById('table-dot').className = 'dot empty';
+}
+
+// ─── DISCOUNT ──────────────────────────────────────────
+function openDiscount() {
+  document.getElementById('discount-overlay').classList.add('open');
+  document.getElementById('disc-input').value = '';
+}
+
+function closeDiscount(e) {
+  if (!e || !e.target.closest('.discount-panel')) {
+    document.getElementById('discount-overlay').classList.remove('open');
+  }
+}
+
+let selectedDiscBtn = null;
+function selectDisc(btn, pct) {
+  document.querySelectorAll('.disc-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  document.getElementById('disc-input').value = pct;
+}
+
+function applyDiscount() {
+  const val = parseFloat(document.getElementById('disc-input').value) || 0;
+  discount = Math.min(100, Math.max(0, val));
+  closeDiscount();
+  renderOrder();
+  showNotif(`Descuento del ${discount}% aplicado`);
+}
+
+// ─── NOTIFICATION ──────────────────────────────────────
+let notifTimer;
+function showNotif(msg) {
+  const el = document.getElementById('notif');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(notifTimer);
+  notifTimer = setTimeout(() => el.classList.remove('show'), 2000);
+}
+
+// ─── SPLIT BILL ──────────────────────────────────────────
+let splitMode = 'equal';
+let splitN = 3;
+let splitPaid = [];
+let activePerson = 0;
+let itemAssignments = {}; // itemIndex -> personIndex
+
+function getTotal() {
+  const sub = orderItems.reduce((s, i) => s + i.price * i.qty, 0);
+  const discAmt = sub * discount / 100;
+  return (sub - discAmt) * 1.23;
+}
+
+function openSplit() {
+  if (orderItems.length === 0) { showNotif('El pedido está vacío'); return; }
+  splitPaid = [];
+  activePerson = 0;
+  itemAssignments = {};
+  document.getElementById('split-table-num').textContent = currentTable;
+  document.getElementById('split-total-label').textContent = `€${getTotal().toFixed(2)}`;
+  setSplitMode('equal');
+  setSplitN(3);
+  document.getElementById('split-overlay').classList.add('open');
+}
+
+function closeSplit(e) {
+  if (!e || !e.target.closest('.split-panel')) {
+    document.getElementById('split-overlay').classList.remove('open');
+  }
+}
+
+function setSplitMode(mode) {
+  splitMode = mode;
+  document.getElementById('mode-equal').classList.toggle('active', mode === 'equal');
+  document.getElementById('mode-item').classList.toggle('active', mode === 'item');
+  document.getElementById('equal-ui').style.display = mode === 'equal' ? '' : 'none';
+  document.getElementById('item-ui').style.display = mode === 'item' ? '' : 'none';
+  if (mode === 'item') renderItemSplit();
+}
+
+function setSplitN(n) {
+  splitN = Math.max(2, Math.min(20, n || 2));
+  splitPaid = Array(splitN).fill(false);
+  // Update active button
+  document.querySelectorAll('.split-n-btn').forEach(b => {
+    b.classList.toggle('active', parseInt(b.textContent) === splitN);
+  });
+  renderSplitParts();
+}
+
+function renderSplitParts() {
+  const total = getTotal();
+  const perPart = total / splitN;
+  const container = document.getElementById('split-parts');
+  container.innerHTML = Array.from({ length: splitN }, (_, i) => `
+    <div class="split-part-row">
+      <div class="p-num">${i + 1}</div>
+      <div class="p-label">Persona ${i + 1}</div>
+      <div class="p-amount">€${perPart.toFixed(2)}</div>
+      ${splitPaid[i]
+        ? '<span class="p-paid">✓ Pagado</span>'
+        : `<button class="pay-part-btn" onclick="markPartPaid(${i}, this)">Cobrar</button>`
+      }
+    </div>
+  `).join('');
+}
+
+function markPartPaid(i, btn) {
+  splitPaid[i] = true;
+  btn.classList.add('paid');
+  btn.textContent = '✓ Pagado';
+  btn.onclick = null;
+  const allPaid = splitPaid.every(Boolean);
+  if (allPaid) {
+    setTimeout(() => {
+      closeSplit();
+      orderItems = [];
+      renderOrder();
+      renderProducts();
+      showNotif('✓ Cuenta dividida y cerrada');
+      const t = tables.find(x => x.num === currentTable);
+      if (t) t.status = 'free';
+      document.getElementById('table-dot').className = 'dot empty';
+    }, 600);
+  }
+}
+
+function renderItemSplit() {
+  const numPersons = 3; // default 3 for item mode
+  // Person tabs
+  const tabsEl = document.getElementById('person-tabs');
+  tabsEl.innerHTML = Array.from({ length: numPersons }, (_, i) => `
+    <div class="person-tab ${i === activePerson ? 'active' : ''}" onclick="setActivePerson(${i})">
+      👤 Persona ${i + 1}
+    </div>
+  `).join('') + `<div class="person-tab" onclick="addPerson()" style="border-style:dashed;">+ Añadir</div>`;
+
+  // Item rows (expand qty into individual lines for clarity)
+  const rows = document.getElementById('item-rows');
+  const expanded = [];
+  orderItems.forEach((item, idx) => {
+    for (let q = 0; q < item.qty; q++) {
+      expanded.push({ ...item, lineKey: `${idx}-${q}` });
+    }
+  });
+
+  rows.innerHTML = expanded.map(item => {
+    const key = item.lineKey;
+    const assigned = itemAssignments[key];
+    const personColors = ['#818cf8','#34d399','#f59e0b','#f87171','#a78bfa'];
+    return `<div class="split-item-row ${assigned !== undefined ? 'assigned' : ''}" onclick="assignItem('${key}')">
+      <div class="si-name">${item.name}</div>
+      <div style="flex:1"></div>
+      ${assigned !== undefined
+        ? `<div class="si-who" style="color:${personColors[assigned] || '#818cf8'}">👤 Persona ${assigned + 1}</div>`
+        : '<div class="si-who" style="color:#444;">Sin asignar</div>'
+      }
+      <div class="si-price">€${item.price.toFixed(2)}</div>
+    </div>`;
+  }).join('');
+
+  renderItemSummary(expanded);
+}
+
+let itemPersonCount = 3;
+function addPerson() {
+  itemPersonCount++;
+  renderItemSplit();
+}
+
+function setActivePerson(i) {
+  activePerson = i;
+  renderItemSplit();
+}
+
+function assignItem(key) {
+  itemAssignments[key] = activePerson;
+  renderItemSplit();
+}
+
+function renderItemSummary(expanded) {
+  const personColors = ['#818cf8','#34d399','#f59e0b','#f87171','#a78bfa'];
+  const totals = {};
+  expanded.forEach(item => {
+    const key = item.lineKey;
+    if (itemAssignments[key] !== undefined) {
+      const p = itemAssignments[key];
+      totals[p] = (totals[p] || 0) + item.price;
+    }
+  });
+  const summary = document.getElementById('item-summary');
+  if (Object.keys(totals).length === 0) { summary.innerHTML = ''; return; }
+  summary.innerHTML = `<div style="font-size:12px; color:#555; margin-top:4px;">Resumen por persona:</div>` +
+    Object.entries(totals).map(([p, amt]) => `
+      <div style="display:flex; justify-content:space-between; background:#141414; border:1px solid #222; border-radius:8px; padding:8px 12px;">
+        <span style="color:${personColors[p] || '#818cf8'}; font-weight:700;">👤 Persona ${parseInt(p)+1}</span>
+        <span style="color:#fff; font-weight:800;">€${(amt * 1.23 * (1 - discount/100)).toFixed(2)}</span>
+      </div>
+    `).join('');
+}
+
+function confirmSplit() {
+  closeSplit();
+  orderItems = [];
+  renderOrder();
+  renderProducts();
+  showNotif('✓ Cuenta dividida y procesada');
+  const t = tables.find(x => x.num === currentTable);
+  if (t) t.status = 'free';
+  document.getElementById('table-dot').className = 'dot empty';
+}
+
+// ─── INIT ──────────────────────────────────────────
+renderProducts();
+renderOrder();
+</script>
+</body>
+</html>

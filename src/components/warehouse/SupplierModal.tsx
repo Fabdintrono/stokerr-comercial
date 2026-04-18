@@ -50,15 +50,12 @@ export function SupplierModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
-    // Simular llamada API
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    
+
     onSave({
       id: initialData?.id,
       ...formData,
     });
-    
+
     setIsSubmitting(false);
     onClose();
   };

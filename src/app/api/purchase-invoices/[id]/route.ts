@@ -117,10 +117,7 @@ export async function PATCH(
     const existing = await prisma.purchaseInvoice.findFirst({
       where: {
         id,
-        OR: [
-          { location: { businessId } },
-          { supplier: { businessId } },
-        ],
+        businessId,
       },
     });
 
@@ -145,12 +142,6 @@ export async function PATCH(
             vatNumber: true,
             email: true,
             phone: true,
-          },
-        },
-        location: {
-          select: {
-            id: true,
-            name: true,
           },
         },
         lineItems: {
@@ -213,10 +204,7 @@ export async function DELETE(
     const existing = await prisma.purchaseInvoice.findFirst({
       where: {
         id,
-        OR: [
-          { location: { businessId } },
-          { supplier: { businessId } },
-        ],
+        businessId,
       },
     });
 

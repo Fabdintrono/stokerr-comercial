@@ -13,7 +13,11 @@ const createProductSchema = z.object({
   maxStock: z.number().min(0).optional(),
   costPrice: z.number().min(0).optional(),
   salePrice: z.number().min(0).optional(),
-  categoryId: z.string(),
+  vatRate: z.number().min(0).max(100).optional(),
+  categoryId: z.string().min(1),
+  brandId: z.string().optional(),
+  initialStock: z.number().min(0).optional(),
+  locationId: z.string().optional(),
 });
 
 // GET /api/products - Listar productos del negocio
@@ -41,11 +45,17 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url);
     const categoryId = searchParams.get('categoryId');
     const search = searchParams.get('search');
+    const posOnly = searchParams.get('posOnly') === 'true';
 
     const where: any = {
       businessId,
-      active: true,
+      isActive: true,
     };
+
+    if (posOnly) {
+      where.showInPos = true;
+      where.category = { showInPos: true };
+    }
 
     if (categoryId) {
       where.categoryId = categoryId;
@@ -62,6 +72,7 @@ export async function GET(request: NextRequest) {
       where,
       include: {
         category: true,
+        brand: { select: { id: true, name: true } },
         inventory: {
           include: {
             location: {
@@ -77,7 +88,21 @@ export async function GET(request: NextRequest) {
       orderBy: { name: 'asc' },
     });
 
-    return NextResponse.json({ products });
+    const serialized = products.map((p) => ({
+      ...p,
+      costPrice: Number(p.costPrice ?? 0),
+      salePrice: Number(p.salePrice ?? 0),
+      vatRate: Number(p.vatRate ?? 0),
+      minStock: Number(p.minStock ?? 0),
+      maxStock: p.maxStock !== null ? Number(p.maxStock) : null,
+      showInPos: p.showInPos,
+      inventory: p.inventory.map((inv) => ({
+        ...inv,
+        quantity: Number(inv.quantity),
+      })),
+    }));
+
+    return NextResponse.json({ products: serialized });
   } catch (error) {
     console.error('Error fetching products:', error);
     return NextResponse.json(
@@ -127,23 +152,52 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const product = await prisma.product.create({
-      data: {
-        businessId,
-        sku: data.sku,
-        name: data.name,
-        description: data.description,
-        unit: data.unit,
-        minStock: data.minStock || 0,
-        maxStock: data.maxStock || 0,
-        costPrice: data.costPrice || 0,
-        salePrice: data.salePrice || 0,
-        categoryId: data.categoryId,
-        isActive: true,
-      },
-      include: {
-        category: true,
-      },
+    const product = await prisma.$transaction(async (tx) => {
+      const created = await tx.product.create({
+        data: {
+          businessId,
+          sku: data.sku,
+          name: data.name,
+          description: data.description,
+          unit: data.unit,
+          minStock: data.minStock || 0,
+          maxStock: data.maxStock || 0,
+          costPrice: data.costPrice || 0,
+          salePrice: data.salePrice || 0,
+          vatRate: data.vatRate ?? 23,
+          categoryId: data.categoryId,
+          brandId: data.brandId || null,
+          isActive: true,
+        },
+        include: { category: true },
+      });
+
+      // Create inventory record if locationId and initialStock provided
+      if (data.locationId && (data.initialStock ?? 0) >= 0) {
+        const inv = await tx.inventory.create({
+          data: {
+            productId: created.id,
+            locationId: data.locationId,
+            quantity: data.initialStock || 0,
+          },
+        });
+
+        if ((data.initialStock || 0) > 0) {
+          await tx.inventoryMovement.create({
+            data: {
+              productId: created.id,
+              locationId: data.locationId,
+              inventoryId: inv.id,
+              type: 'IN',
+              quantity: data.initialStock!,
+              reason: 'Stock inicial',
+              userId: session.user.id,
+            },
+          });
+        }
+      }
+
+      return created;
     });
 
     return NextResponse.json({ product }, { status: 201 });

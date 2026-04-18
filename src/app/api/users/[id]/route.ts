@@ -7,7 +7,7 @@ import { z } from 'zod';
 const updateUserSchema = z.object({
   name: z.string().min(2).optional(),
   password: z.string().min(6).optional(),
-  role: z.enum(['ADMIN', 'WAREHOUSE_MANAGER', 'RESTAURANT_MANAGER', 'CASHIER', 'VIEWER']).optional(),
+  role: z.enum(['SUPER_ADMIN', 'WAREHOUSE_MANAGER', 'RESTAURANT_MANAGER', 'CASHIER', 'WAITER', 'USER']).optional(),
   phone: z.string().optional(),
   active: z.boolean().optional(),
   language: z.string().optional(),
@@ -43,7 +43,6 @@ export async function GET(
                 city: true,
               },
             },
-            isPrimary: true,
           },
         },
       },

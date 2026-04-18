@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -11,11 +12,18 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Bell, Globe, User, Settings, LogOut, ChevronDown, ChefHat } from "lucide-react";
+import { User, Settings, LogOut, ChevronDown, ChefHat } from "lucide-react";
 import Link from "next/link";
+import { NotificationBell } from "@/components/layout/NotificationBell";
 
 export function RestaurantHeader() {
   const { user, logout } = useAuth();
+  const [locationId, setLocationId] = useState<string | null>(null);
+
+  useEffect(() => {
+    const m = document.cookie.match(/locationId=([^;]+)/);
+    setLocationId(m ? m[1] : null);
+  }, []);
 
   const initials = user?.name
     ? user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
@@ -31,11 +39,12 @@ export function RestaurantHeader() {
         </div>
 
         <div className="flex items-center gap-2">
-          {/* POS Link */}
           <Button variant="outline" size="sm" className="h-8 gap-1.5 border-amber-500/50 text-amber-400 hover:bg-amber-500/10">
             <ChefHat className="h-3.5 w-3.5" />
             Abrir POS
           </Button>
+
+          <NotificationBell locationId={locationId} color="amber" />
 
           {/* User menu */}
           <DropdownMenu>
@@ -59,13 +68,13 @@ export function RestaurantHeader() {
               </DropdownMenuLabel>
               <DropdownMenuSeparator className="bg-zinc-800" />
               <DropdownMenuItem asChild>
-                <Link href="/profile" className="text-sm text-zinc-300 hover:text-white">
+                <Link href="/restaurant/settings" className="text-sm text-zinc-300 hover:text-white">
                   <User className="mr-2 h-4 w-4" />
                   Perfil
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link href="/settings" className="text-sm text-zinc-300 hover:text-white">
+                <Link href="/restaurant/settings" className="text-sm text-zinc-300 hover:text-white">
                   <Settings className="mr-2 h-4 w-4" />
                   Configuración
                 </Link>

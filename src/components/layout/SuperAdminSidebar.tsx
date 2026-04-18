@@ -18,12 +18,12 @@ import {
 import { Button } from "@/components/ui/button";
 
 const navItems = [
-  { key: "clients", icon: Store, label: "Clientes", href: "/clients" },
-  { key: "subscriptions", icon: CreditCard, label: "Suscripciones", href: "/subscriptions" },
-  { key: "licenses", icon: Users, label: "Licencias", href: "/licenses" },
-  { key: "support", icon: LifeBuoy, label: "Soporte", href: "/support" },
-  { key: "analytics", icon: BarChart3, label: "Analytics", href: "/analytics" },
-  { key: "settings", icon: Settings, label: "Configuración", href: "/settings" },
+  { key: "clients", icon: Store, label: "Clientes", href: "/super-admin/clients" },
+  { key: "subscriptions", icon: CreditCard, label: "Suscripciones", href: "/super-admin/subscriptions" },
+  { key: "licenses", icon: Users, label: "Licencias", href: "/super-admin/licenses" },
+  { key: "support", icon: LifeBuoy, label: "Soporte", href: "/super-admin/support" },
+  { key: "analytics", icon: BarChart3, label: "Analytics", href: "/super-admin/analytics" },
+  { key: "settings", icon: Settings, label: "Configuración", href: "/super-admin/settings" },
 ];
 
 interface SuperAdminSidebarProps {

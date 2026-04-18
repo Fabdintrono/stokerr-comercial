@@ -12,8 +12,13 @@ const updateProductSchema = z.object({
   maxStock: z.number().min(0).optional(),
   costPrice: z.number().min(0).optional(),
   salePrice: z.number().min(0).optional(),
+  vatRate: z.number().min(0).max(100).optional(),
   categoryId: z.string().optional(),
+  brandId: z.string().nullable().optional(),
   isActive: z.boolean().optional(),
+  showInPos: z.boolean().optional(),
+  initialStock: z.number().min(0).optional(),
+  locationId: z.string().optional(),
 });
 
 // GET /api/products/[id] - Obtener producto por ID
@@ -90,7 +95,7 @@ export async function PATCH(
       );
     }
 
-    const businessId = request.cookies.get('businessId')?.value;
+    const businessId = request.headers.get('X-Business-Id') || request.cookies.get('businessId')?.value;
     
     if (!businessId) {
       return NextResponse.json(
@@ -117,12 +122,58 @@ export async function PATCH(
     const body = await request.json();
     const data = updateProductSchema.parse(body);
 
-    const product = await prisma.product.update({
-      where: { id },
-      data,
-      include: {
-        category: true,
-      },
+    const { initialStock, locationId, ...productFields } = data;
+
+    const product = await prisma.$transaction(async (tx) => {
+      const updated = await tx.product.update({
+        where: { id },
+        data: productFields,
+        include: { category: true },
+      });
+
+      // Update inventory if locationId and initialStock provided
+      if (locationId && initialStock !== undefined) {
+        const inv = await tx.inventory.findUnique({
+          where: { productId_locationId: { productId: id, locationId } },
+        });
+
+        if (inv) {
+          const diff = initialStock - inv.quantity;
+          if (diff !== 0) {
+            await tx.inventory.update({ where: { id: inv.id }, data: { quantity: initialStock } });
+            await tx.inventoryMovement.create({
+              data: {
+                productId: id,
+                locationId,
+                inventoryId: inv.id,
+                type: diff > 0 ? 'IN' : 'OUT',
+                quantity: Math.abs(diff),
+                reason: 'Ajuste manual de stock',
+                userId: session.user.id,
+              },
+            });
+          }
+        } else if (initialStock >= 0) {
+          const newInv = await tx.inventory.create({
+            data: { productId: id, locationId, quantity: initialStock },
+          });
+          if (initialStock > 0) {
+            await tx.inventoryMovement.create({
+              data: {
+                productId: id,
+                locationId,
+                inventoryId: newInv.id,
+                type: 'IN',
+                quantity: initialStock,
+                reason: 'Stock inicial',
+                userId: session.user.id,
+              },
+            });
+          }
+        }
+      }
+
+      return updated;
     });
 
     return NextResponse.json({ product });
@@ -157,7 +208,7 @@ export async function DELETE(
       );
     }
 
-    const businessId = request.cookies.get('businessId')?.value;
+    const businessId = request.headers.get('X-Business-Id') || request.cookies.get('businessId')?.value;
     
     if (!businessId) {
       return NextResponse.json(

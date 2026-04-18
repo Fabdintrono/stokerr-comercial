@@ -8,7 +8,7 @@ const createUserSchema = z.object({
   email: z.string().email('Email inválido'),
   name: z.string().min(2, 'Nombre debe tener al menos 2 caracteres'),
   password: z.string().min(6, 'Contraseña debe tener al menos 6 caracteres'),
-  role: z.enum(['SUPER_ADMIN', 'WAREHOUSE_MANAGER', 'RESTAURANT_MANAGER', 'CASHIER', 'USER']),
+  role: z.enum(['SUPER_ADMIN', 'WAREHOUSE_MANAGER', 'RESTAURANT_MANAGER', 'CASHIER', 'WAITER', 'USER']),
   phone: z.string().optional(),
   language: z.string().default('pt-PT'),
 });
@@ -55,7 +55,6 @@ export async function GET(request: NextRequest) {
                 type: true,
               },
             },
-            isPrimary: true,
           },
         },
       },

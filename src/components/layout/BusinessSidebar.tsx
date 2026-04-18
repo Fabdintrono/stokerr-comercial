@@ -24,16 +24,25 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const navItems = [
-  { key: "dashboard", icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" },
-  { key: "warehouse", icon: Warehouse, label: "Depósito", href: "/warehouse" },
-  { key: "restaurants", icon: Building2, label: "Restaurantes", href: "/restaurants" },
-  { key: "products", icon: Package, label: "Productos", href: "/products" },
-  { key: "suppliers", icon: Truck, label: "Proveedores", href: "/suppliers" },
-  { key: "recipes", icon: ChefHat, label: "Recetas", href: "/recipes" },
-  { key: "reports", icon: BarChart3, label: "Reportes", href: "/reports" },
-  { key: "staff", icon: Users, label: "Personal", href: "/staff" },
-  { key: "settings", icon: Settings, label: "Configuración", href: "/settings" },
+const navItems: { key: string; icon: any; label: string; href: string; section?: string }[] = [
+  // ── Visión general ────────────────────────────
+  { key: "dashboard",   icon: LayoutDashboard, label: "Dashboard",    href: "/business/dashboard",   section: "Visión general" },
+
+  // ── Operaciones ───────────────────────────────
+  { key: "warehouse",   icon: Warehouse,       label: "Depósito",     href: "/business/warehouse",   section: "Operaciones" },
+  { key: "restaurants", icon: Building2,       label: "Restaurantes", href: "/business/restaurants" },
+
+  // ── Menú ──────────────────────────────────────
+  { key: "products",    icon: Package,         label: "Productos",    href: "/business/products",    section: "Menú" },
+  { key: "recipes",     icon: ChefHat,         label: "Recetas",      href: "/business/recipes" },
+
+  // ── Compras ───────────────────────────────────
+  { key: "suppliers",   icon: Truck,           label: "Proveedores",  href: "/business/suppliers",   section: "Compras" },
+
+  // ── Administración ────────────────────────────
+  { key: "staff",       icon: Users,           label: "Personal",     href: "/business/staff",       section: "Administración" },
+  { key: "reports",     icon: BarChart3,       label: "Reportes",     href: "/business/reports" },
+  { key: "settings",    icon: Settings,        label: "Configuración", href: "/business/settings" },
 ];
 
 export function BusinessSidebar() {
@@ -45,8 +54,8 @@ export function BusinessSidebar() {
   const businessName = "Restaurante Demo";
 
   const isActive = (key: string) => {
-    if (key === "dashboard") return pathname === "/dashboard" || pathname === "/";
-    return pathname.startsWith(`/${key}`);
+    if (key === "dashboard") return pathname === "/business/dashboard" || pathname === "/";
+    return pathname.startsWith(`/business/${key}`);
   };
 
   return (
@@ -56,7 +65,7 @@ export function BusinessSidebar() {
     )}>
       {/* Logo */}
       <div className="flex h-14 items-center border-b border-zinc-800 px-3">
-        <Link href="/dashboard" className="flex items-center gap-2">
+        <Link href="/business/dashboard" className="flex items-center gap-2">
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-emerald-500 shadow-lg shadow-emerald-500/25">
             <Store className="h-4 w-4 text-white" />
           </div>
@@ -88,21 +97,27 @@ export function BusinessSidebar() {
             const active = isActive(item.key);
 
             return (
-              <Link
-                key={item.key}
-                href={item.href}
-                className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150",
-                  active
-                    ? "bg-emerald-500/10 text-emerald-400 border-l-2 border-emerald-500"
-                    : "text-zinc-400 hover:bg-zinc-800 hover:text-white",
-                  collapsed && "justify-center px-2"
+              <div key={item.key}>
+                {item.section && !collapsed && (
+                  <p className="px-3 pt-4 pb-1 text-[10px] font-semibold uppercase tracking-widest text-zinc-600">
+                    {item.section}
+                  </p>
                 )}
-                title={collapsed ? item.label : undefined}
-              >
-                <Icon className="h-4 w-4 shrink-0" />
-                {!collapsed && <span>{item.label}</span>}
-              </Link>
+                <Link
+                  href={item.href}
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all duration-150",
+                    active
+                      ? "bg-emerald-500/10 text-emerald-400 border-l-2 border-emerald-500"
+                      : "text-zinc-400 hover:bg-zinc-800 hover:text-white",
+                    collapsed && "justify-center px-2"
+                  )}
+                  title={collapsed ? item.label : undefined}
+                >
+                  <Icon className="h-4 w-4 shrink-0" />
+                  {!collapsed && <span>{item.label}</span>}
+                </Link>
+              </div>
             );
           })}
         </div>

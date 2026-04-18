@@ -38,7 +38,6 @@ export async function GET(request: NextRequest) {
     const suppliers = await prisma.supplier.findMany({
       where: {
         businessId,
-        active: true,
       },
       orderBy: { name: 'asc' },
     });

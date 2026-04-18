@@ -12,8 +12,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Bell, User, Settings, LogOut, Menu } from "lucide-react";
+
+import { User, Settings, LogOut, Menu } from "lucide-react";
 import Link from "next/link";
+import { NotificationBell } from "@/components/layout/NotificationBell";
 
 interface WarehouseHeaderProps {
   onMenuToggle?: () => void;
@@ -48,25 +50,7 @@ export function WarehouseHeader({ onMenuToggle }: WarehouseHeaderProps) {
 
         {/* Right side - Notifications + User */}
         <div className="flex items-center gap-1 md:gap-2">
-          {/* Notifications */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button 
-                variant="ghost" 
-                size="icon" 
-                className="h-9 w-9 text-zinc-400 hover:text-white hover:bg-zinc-800"
-              >
-                <Bell className="h-5 w-5" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-72 bg-zinc-900 border-zinc-800">
-              <DropdownMenuLabel className="text-white">Notificaciones</DropdownMenuLabel>
-              <DropdownMenuSeparator className="bg-zinc-800" />
-              <div className="py-4 px-2 text-center">
-                <p className="text-sm text-zinc-500">No hay notificaciones nuevas</p>
-              </div>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <NotificationBell color="emerald" />
 
           {/* User menu */}
           <DropdownMenu>

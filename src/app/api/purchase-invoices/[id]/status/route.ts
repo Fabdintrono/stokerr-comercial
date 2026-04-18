@@ -16,7 +16,7 @@ export async function PATCH(
   try {
     const { id } = await params;
     const session = await getServerSession(authOptions);
-    
+
     if (!session?.user?.id) {
       return NextResponse.json(
         { error: 'No autorizado' },
@@ -24,8 +24,8 @@ export async function PATCH(
       );
     }
 
-    const businessId = request.cookies.get('businessId')?.value;
-    
+    const businessId = request.headers.get('X-Business-Id') || request.cookies.get('businessId')?.value;
+
     if (!businessId) {
       return NextResponse.json(
         { error: 'No hay negocio seleccionado' },
@@ -33,14 +33,10 @@ export async function PATCH(
       );
     }
 
-    // Verificar que la factura pertenece al negocio
     const existing = await prisma.purchaseInvoice.findFirst({
-      where: {
-        id,
-        OR: [
-          { location: { businessId } },
-          { supplier: { businessId } },
-        ],
+      where: { id, businessId },
+      include: {
+        lineItems: true,
       },
     });
 
@@ -54,37 +50,75 @@ export async function PATCH(
     const body = await request.json();
     const data = updateInvoiceStatusSchema.parse(body);
 
-    const invoice = await prisma.purchaseInvoice.update({
-      where: { id },
-      data: {
-        status: data.status,
-      },
-      include: {
-        supplier: {
-          select: {
-            id: true,
-            name: true,
-            vatNumber: true,
+    // Only update inventory when transitioning TO RECEIVED (not already received/paid)
+    const shouldUpdateInventory =
+      data.status === 'RECEIVED' &&
+      existing.status !== 'RECEIVED' &&
+      existing.status !== 'PAID';
+
+    const invoice = await prisma.$transaction(async (tx) => {
+      const updated = await tx.purchaseInvoice.update({
+        where: { id },
+        data: { status: data.status },
+        include: {
+          supplier: { select: { id: true, name: true, vatNumber: true } },
+          lineItems: {
+            include: { product: { select: { id: true, name: true, sku: true } } },
           },
         },
-        location: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        lineItems: {
-          include: {
-            product: {
-              select: {
-                id: true,
-                name: true,
-                sku: true,
-              },
-            },
-          },
-        },
-      },
+      });
+
+      if (shouldUpdateInventory) {
+        // Find warehouse location for this business
+        const warehouseLocation = await tx.location.findFirst({
+          where: { businessId, type: 'WAREHOUSE', isActive: true },
+          select: { id: true },
+        });
+        const locationId = warehouseLocation?.id;
+
+        if (locationId) {
+          for (const item of existing.lineItems) {
+            const inv = await tx.inventory.findUnique({
+              where: { productId_locationId: { productId: item.productId, locationId } },
+            });
+
+            if (inv) {
+              await tx.inventory.update({
+                where: { id: inv.id },
+                data: { quantity: inv.quantity + item.quantity },
+              });
+              await tx.inventoryMovement.create({
+                data: {
+                  productId: item.productId,
+                  locationId,
+                  inventoryId: inv.id,
+                  type: 'IN',
+                  quantity: item.quantity,
+                  reason: `Factura de compra #${existing.number}`,
+                  userId: session.user.id,
+                },
+              });
+            } else {
+              const newInv = await tx.inventory.create({
+                data: { productId: item.productId, locationId, quantity: item.quantity },
+              });
+              await tx.inventoryMovement.create({
+                data: {
+                  productId: item.productId,
+                  locationId,
+                  inventoryId: newInv.id,
+                  type: 'IN',
+                  quantity: item.quantity,
+                  reason: `Factura de compra #${existing.number}`,
+                  userId: session.user.id,
+                },
+              });
+            }
+          }
+        }
+      }
+
+      return updated;
     });
 
     return NextResponse.json({ invoice });

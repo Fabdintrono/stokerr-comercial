@@ -16,6 +16,7 @@ enum Role {
   WAREHOUSE_MANAGER
   RESTAURANT_MANAGER
   CASHIER
+  WAITER
   USER
 }
 
@@ -74,12 +75,14 @@ model User {
   updatedAt DateTime @updatedAt
 
   // Relaciones
-  auditLogs          AuditLog[]
-  cashRegisters      CashRegister[]
-  inventoryMovements InventoryMovement[]
-  locations          UserLocation[]
-  businesses         UserBusiness[]
-  orders             Order[]
+  auditLogs              AuditLog[]
+  cashRegisters          CashRegister[]
+  inventoryMovements     InventoryMovement[]
+  locations              UserLocation[]
+  businesses             UserBusiness[]
+  orders                 Order[]
+  replenishRequested     ReplenishmentRequest[] @relation("ReplenishRequested")
+  replenishReviewed      ReplenishmentRequest[] @relation("ReplenishReviewed")
 
   @@map("users")
 }
@@ -100,13 +103,17 @@ model Business {
   updatedAt      DateTime @updatedAt
 
   // Relaciones
-  locations  Location[]
-  categories Category[]
-  products   Product[]
-  suppliers  Supplier[]
-  users      UserBusiness[]
-  invoices   PurchaseInvoice[]
-  auditLogs  AuditLog[]
+  locations            Location[]
+  categories           Category[]
+  brands               Brand[]
+  products             Product[]
+  suppliers            Supplier[]
+  users                UserBusiness[]
+  invoices             PurchaseInvoice[]
+  recipes              Recipe[]
+  auditLogs            AuditLog[]
+  replenishmentRequests ReplenishmentRequest[]
+  notifications        Notification[]
 
   @@map("businesses")
 }
@@ -130,26 +137,29 @@ model UserBusiness {
 // ============================================
 
 model Location {
-  id         String  @id @default(cuid())
-  name       String
-  type       String // WAREHOUSE, RESTAURANT
-  address    String?
-  city       String?
-  postalCode String?
-  phone      String?
-  email      String?
-  isActive   Boolean @default(true)
-  businessId String
+  id           String  @id @default(cuid())
+  name         String
+  type         String // WAREHOUSE, RESTAURANT
+  address      String?
+  city         String?
+  postalCode   String?
+  phone        String?
+  email        String?
+  isActive     Boolean @default(true)
+  businessId   String
+  kitchenToken String  @unique @default(dbgenerated("gen_random_uuid()"))
 
-  business          Business            @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  users             UserLocation[]
-  inventory         Inventory[]
-  transfersFrom     Transfer[]          @relation("fromLocation")
-  transfersTo       Transfer[]          @relation("toLocation")
-  cashRegisters     CashRegister[]
-  orders            Order[]
-  tables            Table[]
-  InventoryMovement InventoryMovement[]
+  business              Business                  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  users                 UserLocation[]
+  inventory             Inventory[]
+  transfersFrom         Transfer[]                @relation("fromLocation")
+  transfersTo           Transfer[]                @relation("toLocation")
+  cashRegisters         CashRegister[]
+  orders                Order[]
+  tables                Table[]
+  InventoryMovement     InventoryMovement[]
+  replenishFrom         ReplenishmentRequest[]    @relation("ReplenishFrom")
+  replenishTo           ReplenishmentRequest[]    @relation("ReplenishTo")
 
   @@map("locations")
 }
@@ -175,11 +185,28 @@ model Category {
   name        String
   description String?
   businessId  String
+  parentId    String?
+  showInPos   Boolean @default(false)
+
+  business Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  parent   Category?  @relation("CategoryParent", fields: [parentId], references: [id])
+  children Category[] @relation("CategoryParent")
+  products Product[]
+
+  @@map("categories")
+}
+
+model Brand {
+  id         String  @id @default(cuid())
+  name       String
+  description String?
+  isActive   Boolean @default(true)
+  businessId String
 
   business Business  @relation(fields: [businessId], references: [id], onDelete: Cascade)
   products Product[]
 
-  @@map("categories")
+  @@map("brands")
 }
 
 model Product {
@@ -194,16 +221,22 @@ model Product {
   salePrice   Decimal @default(0)
   vatRate     Decimal @default(23)
   isActive    Boolean @default(true)
+  showInPos   Boolean @default(false)
   categoryId  String
   businessId  String
+  brandId     String?
 
-  category     Category            @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  business     Business            @relation(fields: [businessId], references: [id], onDelete: Cascade)
-  inventory    Inventory[]
-  movements    InventoryMovement[]
-  invoiceItems InvoiceLineItem[]
-  recipeItems  RecipeItem[]
-  orderItems   OrderItem[]
+  category              Category                   @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  brand                 Brand?                     @relation(fields: [brandId], references: [id])
+  business              Business                   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  inventory             Inventory[]
+  movements             InventoryMovement[]
+  invoiceItems          InvoiceLineItem[]
+  recipeItems           RecipeItem[]
+  recipe                Recipe?                    @relation("RecipeProduct")
+  orderItems            OrderItem[]
+  transferItems         TransferLineItem[]
+  replenishmentItems    ReplenishmentRequestItem[]
 
   @@map("products")
 }
@@ -223,20 +256,20 @@ model Inventory {
 }
 
 model InventoryMovement {
-  id         String       @id @default(cuid())
-  type       MovementType
-  quantity   Float
-  reason     String?
-  productId  String
-  locationId String
-  userId     String
-  createdAt  DateTime     @default(now())
-
-  product     Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
-  location    Location   @relation(fields: [locationId], references: [id], onDelete: Cascade)
-  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  Inventory   Inventory? @relation(fields: [inventoryId], references: [id])
+  id          String        @id @default(cuid())
+  type        MovementType
+  quantity    Float
+  reason      String?
+  productId   String
+  locationId  String
+  userId      String
   inventoryId String?
+  createdAt   DateTime      @default(now())
+
+  product   Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  location  Location   @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  inventory Inventory? @relation(fields: [inventoryId], references: [id])
 
   @@map("inventory_movements")
 }
@@ -328,9 +361,51 @@ model TransferLineItem {
   quantity   Float
   productId  String
   transferId String
-  Transfer   Transfer @relation(fields: [transferId], references: [id])
+
+  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  transfer Transfer @relation(fields: [transferId], references: [id], onDelete: Cascade)
 
   @@map("transfer_line_items")
+}
+
+// ============================================
+// REPLENISHMENT REQUESTS
+// ============================================
+
+model ReplenishmentRequest {
+  id             String    @id @default(cuid())
+  status         String    @default("PENDING") // PENDING, APPROVED, REJECTED
+  notes          String?
+  reviewNotes    String?
+  fromLocationId String
+  toLocationId   String
+  businessId     String
+  requestedById  String
+  reviewedById   String?
+  reviewedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  fromLocation Location                  @relation("ReplenishFrom", fields: [fromLocationId], references: [id])
+  toLocation   Location                  @relation("ReplenishTo", fields: [toLocationId], references: [id])
+  business     Business                  @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  requestedBy  User                      @relation("ReplenishRequested", fields: [requestedById], references: [id])
+  reviewedBy   User?                     @relation("ReplenishReviewed", fields: [reviewedById], references: [id])
+  items        ReplenishmentRequestItem[]
+
+  @@map("replenishment_requests")
+}
+
+model ReplenishmentRequestItem {
+  id        String @id @default(cuid())
+  quantity  Float
+  requestId String
+  productId String
+
+  request ReplenishmentRequest @relation(fields: [requestId], references: [id], onDelete: Cascade)
+  product Product              @relation(fields: [productId], references: [id])
+
+  @@map("replenishment_request_items")
 }
 
 // ============================================
@@ -343,15 +418,20 @@ model Recipe {
   description String?
   yield       Float   @default(1)
   isActive    Boolean @default(true)
+  productId   String  @unique
+  businessId  String
 
-  items RecipeItem[]
+  product  Product     @relation("RecipeProduct", fields: [productId], references: [id], onDelete: Cascade)
+  business Business    @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  items    RecipeItem[]
 
   @@map("recipes")
 }
 
 model RecipeItem {
-  id        String @id @default(cuid())
+  id        String  @id @default(cuid())
   quantity  Float
+  unit      String?
   recipeId  String
   productId String
 
@@ -371,6 +451,7 @@ model Table {
   capacity   Int     @default(4)
   isActive   Boolean @default(true)
   locationId String
+  qrToken    String  @unique @default(dbgenerated("gen_random_uuid()"))
 
   location Location @relation(fields: [locationId], references: [id], onDelete: Cascade)
   orders   Order[]
@@ -383,6 +464,7 @@ model Order {
   number      String
   status      String   @default("OPEN")
   totalAmount Decimal  @default(0)
+  notes       String?
   locationId  String
   tableId     String?
   userId      String
@@ -463,6 +545,26 @@ model AuditLog {
   business Business? @relation(fields: [businessId], references: [id])
 
   @@map("audit_logs")
+}
+
+// ============================================
+// NOTIFICATIONS
+// ============================================
+
+model Notification {
+  id         String   @id @default(cuid())
+  type       String   // REPLENISHMENT_REQUEST, REPLENISHMENT_UPDATED, TRANSFER_INCOMING, LOW_STOCK
+  title      String
+  message    String
+  read       Boolean  @default(false)
+  businessId String
+  locationId String?
+  entityId   String?
+  createdAt  DateTime @default(now())
+
+  business Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+
+  @@map("notifications")
 }
 
 // ============================================
