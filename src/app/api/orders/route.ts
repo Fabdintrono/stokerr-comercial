@@ -1,12 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { effectiveRate } from '@/lib/rates/rateEngine';
+import { makeRateLoader } from '@/lib/rates/loadRates';
+import type { CurrencyCode } from '@/lib/currency';
 
 const createOrderSchema = z.object({
   locationId: z.string(),
   tableId: z.string().optional(),
   userId: z.string(),
   notes: z.string().optional(),
+  currency: z.enum(['USD', 'VES', 'BRL']).optional(),
   items: z.array(z.object({
     productId: z.string(),
     quantity: z.number().min(0.01),
@@ -62,6 +66,54 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const validated = createOrderSchema.parse(body);
 
+    // Resolve businessId: prefer header/cookie, fall back to location lookup
+    const businessIdHeader =
+      request.headers.get('X-Business-Id') ||
+      request.cookies.get('businessId')?.value;
+
+    let businessId: string;
+    if (businessIdHeader) {
+      businessId = businessIdHeader;
+    } else {
+      const location = await prisma.location.findUnique({
+        where: { id: validated.locationId },
+        select: { businessId: true },
+      });
+      if (!location) {
+        return NextResponse.json({ error: 'Ubicación no encontrada' }, { status: 400 });
+      }
+      businessId = location.businessId;
+    }
+
+    // Load business currency settings
+    const business = await prisma.business.findUnique({
+      where: { id: businessId },
+      select: { baseCurrency: true },
+    });
+    if (!business) {
+      return NextResponse.json({ error: 'Negocio no encontrado' }, { status: 400 });
+    }
+
+    const orderCurrency: CurrencyCode = (validated.currency ?? business.baseCurrency) as CurrencyCode;
+    const baseCurrency: CurrencyCode = business.baseCurrency as CurrencyCode;
+
+    // Compute frozen rate (1 if same as base, else load from exchange rates)
+    let rateToBase: string;
+    try {
+      const rate = await effectiveRate(
+        orderCurrency,
+        baseCurrency,
+        new Date(),
+        makeRateLoader(prisma, businessId)
+      );
+      rateToBase = rate.toString();
+    } catch {
+      return NextResponse.json(
+        { error: `no exchange rate set for ${orderCurrency} today` },
+        { status: 422 }
+      );
+    }
+
     // Generate order number
     const today = new Date();
     const datePrefix = today.toISOString().slice(0, 10).replace(/-/g, '');
@@ -88,6 +140,8 @@ export async function POST(request: NextRequest) {
         userId: validated.userId,
         notes: validated.notes,
         totalAmount,
+        currency: orderCurrency as any,
+        rateToBase,
         items: {
           create: validated.items.map((item) => ({
             productId: item.productId,
