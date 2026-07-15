@@ -57,6 +57,18 @@ enum MovementType {
   ADJUSTMENT
 }
 
+enum Currency {
+  USD
+  VES
+  BRL
+}
+
+enum RateSource {
+  AUTO_BCV
+  AUTO_FOREX
+  MANUAL
+}
+
 // ============================================
 // USER & AUTH
 // ============================================
@@ -102,6 +114,13 @@ model Business {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
+  // Multi-moneda
+  baseCurrency      Currency   @default(USD)
+  secondaryCurrency Currency?
+  enabledCurrencies Currency[] @default([USD])
+  multiCurrency     Boolean    @default(false)
+  rateSource        RateSource @default(MANUAL)
+
   // Relaciones
   locations            Location[]
   categories           Category[]
@@ -114,8 +133,24 @@ model Business {
   auditLogs            AuditLog[]
   replenishmentRequests ReplenishmentRequest[]
   notifications        Notification[]
+  exchangeRates        ExchangeRate[]
 
   @@map("businesses")
+}
+
+model ExchangeRate {
+  id         String     @id @default(cuid())
+  businessId String
+  business   Business   @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  currency   Currency
+  rate       Decimal    @db.Decimal(18, 6)
+  date       DateTime   @db.Date
+  source     RateSource
+  createdAt  DateTime   @default(now())
+
+  @@unique([businessId, currency, date])
+  @@index([businessId, currency, date])
+  @@map("exchange_rates")
 }
 
 model UserBusiness {
@@ -464,6 +499,8 @@ model Order {
   number      String
   status      String   @default("OPEN")
   totalAmount Decimal  @default(0)
+  currency    Currency @default(USD)
+  rateToBase  Decimal  @default(1) @db.Decimal(18, 6)
   notes       String?
   locationId  String
   tableId     String?
@@ -498,6 +535,8 @@ model Payment {
   id        String   @id @default(cuid())
   amount    Decimal
   method    String   @default("CASH")
+  currency   Currency @default(USD)
+  rateToBase Decimal  @default(1) @db.Decimal(18, 6)
   orderId   String
   createdAt DateTime @default(now())
 
