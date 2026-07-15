@@ -84,3 +84,14 @@
 .text-balance {
   text-wrap: balance;
 }
+
+/* driver.js Tour — Stocker dark theme */
+.driver-popover.stocker-tour {
+  background: hsl(var(--card));
+  color: hsl(var(--foreground));
+  border: 1px solid hsl(var(--border));
+}
+.driver-popover.stocker-tour .driver-popover-title { color: hsl(var(--foreground)); }
+.driver-popover.stocker-tour .driver-popover-next-btn {
+  background: hsl(var(--primary)); color: hsl(var(--primary-foreground)); border: none;
+}

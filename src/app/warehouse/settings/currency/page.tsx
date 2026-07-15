@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
-import { DollarSign, Globe, ToggleLeft } from 'lucide-react'
+import { DollarSign, Globe, ToggleLeft, BookOpen } from 'lucide-react'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
+import { runTour } from '@/components/tour/TourProvider'
+import { currencyTourSteps } from '@/components/tour/steps.currency'
 
 type CurrencyCode = 'USD' | 'VES' | 'BRL'
 
@@ -111,6 +113,14 @@ export default function CurrencySettingsPage() {
             Define la moneda base, secundaria y las tasas de cambio de tu negocio
           </p>
         </div>
+        <Button
+          variant="outline"
+          onClick={() => runTour(currencyTourSteps)}
+          className="border-zinc-700 text-zinc-300 hover:text-white hover:bg-zinc-800 gap-2"
+        >
+          <BookOpen className="h-4 w-4" />
+          Ver tour
+        </Button>
       </div>
 
       {/* Multi-currency toggle */}
