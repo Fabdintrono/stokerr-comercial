@@ -9,6 +9,7 @@ import { Label } from '@/components/ui/label'
 import { Switch } from '@/components/ui/switch'
 import { runTour } from '@/components/tour/TourProvider'
 import { currencyTourSteps } from '@/components/tour/steps.currency'
+import { useI18n } from '@/lib/i18n'
 
 type CurrencyCode = 'USD' | 'VES' | 'BRL'
 
@@ -26,13 +27,8 @@ const ALL_CURRENCIES: { code: CurrencyCode; label: string; symbol: string }[] = 
   { code: 'BRL', label: 'Real brasileño (BRL)', symbol: 'R$' },
 ]
 
-const RATE_SOURCE_LABELS: Record<CurrencySettings['rateSource'], string> = {
-  AUTO_BCV: 'BCV (automático)',
-  AUTO_FOREX: 'Forex (automático)',
-  MANUAL: 'Manual',
-}
-
 export default function CurrencySettingsPage() {
+  const { t } = useI18n()
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [settings, setSettings] = useState<CurrencySettings>({
@@ -43,20 +39,27 @@ export default function CurrencySettingsPage() {
     rateSource: 'MANUAL',
   })
 
+  const RATE_SOURCE_LABELS: Record<CurrencySettings['rateSource'], string> = {
+    AUTO_BCV: t('currency.sourceBcv'),
+    AUTO_FOREX: t('currency.sourceForex'),
+    MANUAL: t('rates.manual'),
+  }
+
   useEffect(() => {
     async function load() {
       try {
         const res = await fetch('/api/business/currency')
-        if (!res.ok) throw new Error('Error al cargar')
+        if (!res.ok) throw new Error(t('common.errorLoading'))
         const json = await res.json()
         setSettings(json.data)
       } catch {
-        toast.error('No se pudo cargar la configuración de moneda')
+        toast.error(t('currency.loadError'))
       } finally {
         setLoading(false)
       }
     }
     load()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   function toggleEnabled(code: CurrencyCode) {
@@ -82,11 +85,11 @@ export default function CurrencySettingsPage() {
         body: JSON.stringify(settings),
       })
       const json = await res.json()
-      if (!res.ok) throw new Error(json.error || 'Error al guardar')
+      if (!res.ok) throw new Error(json.error || t('common.errorSaving'))
       setSettings(json.data)
-      toast.success('Configuración de moneda guardada')
+      toast.success(t('currency.configSaved'))
     } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : 'Error al guardar')
+      toast.error(e instanceof Error ? e.message : t('common.errorSaving'))
     } finally {
       setSaving(false)
     }
@@ -108,9 +111,9 @@ export default function CurrencySettingsPage() {
     <div className="flex flex-col gap-6 p-6" data-tour="currency-settings">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
-          <h1 className="text-2xl font-bold text-white">Configuración de Moneda</h1>
+          <h1 className="text-2xl font-bold text-white">{t('currency.settingsTitle')}</h1>
           <p className="text-sm text-zinc-400">
-            Define la moneda base, secundaria y las tasas de cambio de tu negocio
+            {t('currency.settingsDesc')}
           </p>
         </div>
         <Button
@@ -119,7 +122,7 @@ export default function CurrencySettingsPage() {
           className="border-zinc-700 text-zinc-300 hover:text-white hover:bg-zinc-800 gap-2"
         >
           <BookOpen className="h-4 w-4" />
-          Ver tour
+          {t('currency.tourBtn')}
         </Button>
       </div>
 
@@ -128,14 +131,14 @@ export default function CurrencySettingsPage() {
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <ToggleLeft className="h-4 w-4 text-emerald-400" />
-            Multi-moneda
+            {t('currency.multiCurrencyTitle')}
           </CardTitle>
         </CardHeader>
         <CardContent className="flex items-center justify-between py-2">
           <div>
-            <p className="text-sm font-medium text-white">Habilitar multi-moneda</p>
+            <p className="text-sm font-medium text-white">{t('currency.enableMulti')}</p>
             <p className="text-xs text-zinc-400">
-              Muestra precios en la moneda base y secundaria simultáneamente
+              {t('currency.enableMultiDesc')}
             </p>
           </div>
           <Switch
@@ -151,12 +154,12 @@ export default function CurrencySettingsPage() {
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <DollarSign className="h-4 w-4 text-emerald-400" />
-            Moneda base y secundaria
+            {t('currency.baseAndSecondary')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="space-y-2">
-            <Label className="text-zinc-300">Moneda base</Label>
+            <Label className="text-zinc-300">{t('currency.base')}</Label>
             <div className="flex flex-wrap gap-2">
               {ALL_CURRENCIES.filter((c) =>
                 settings.enabledCurrencies.includes(c.code)
@@ -178,12 +181,12 @@ export default function CurrencySettingsPage() {
               ))}
             </div>
             <p className="text-xs text-zinc-500">
-              La moneda base es la referencia principal para todos los precios
+              {t('currency.baseHint')}
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label className="text-zinc-300">Moneda secundaria</Label>
+            <Label className="text-zinc-300">{t('currency.secondary')}</Label>
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
@@ -196,7 +199,7 @@ export default function CurrencySettingsPage() {
                     : 'bg-zinc-800/50 border-zinc-700 text-zinc-300 hover:border-zinc-500'
                 }`}
               >
-                Ninguna
+                {t('currency.none')}
               </button>
               {ALL_CURRENCIES.filter(
                 (c) =>
@@ -220,7 +223,7 @@ export default function CurrencySettingsPage() {
               ))}
             </div>
             <p className="text-xs text-zinc-500">
-              Se muestra junto a la base en la vista dual (muted)
+              {t('currency.secondaryHint')}
             </p>
           </div>
         </CardContent>
@@ -231,7 +234,7 @@ export default function CurrencySettingsPage() {
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <Globe className="h-4 w-4 text-emerald-400" />
-            Monedas habilitadas
+            {t('currency.enabledTitle')}
           </CardTitle>
         </CardHeader>
         <CardContent data-tour="enabled-currencies">
@@ -249,11 +252,11 @@ export default function CurrencySettingsPage() {
                       {c.label}
                       {isBase && (
                         <span className="ml-2 text-xs text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">
-                          base
+                          {t('currency.baseBadge')}
                         </span>
                       )}
                     </p>
-                    <p className="text-xs text-zinc-400">Símbolo: {c.symbol}</p>
+                    <p className="text-xs text-zinc-400">{t('currency.symbolLabel')} {c.symbol}</p>
                   </div>
                   <Switch
                     checked={enabled}
@@ -266,7 +269,7 @@ export default function CurrencySettingsPage() {
             })}
           </div>
           <p className="text-xs text-zinc-500 mt-3">
-            La moneda base no puede deshabilitarse
+            {t('currency.baseCannotDisable')}
           </p>
         </CardContent>
       </Card>
@@ -276,7 +279,7 @@ export default function CurrencySettingsPage() {
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <DollarSign className="h-4 w-4 text-emerald-400" />
-            Fuente de tasas
+            {t('currency.rateSourceTitle')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -307,7 +310,7 @@ export default function CurrencySettingsPage() {
           disabled={saving}
           className="bg-emerald-500 hover:bg-emerald-600 text-white"
         >
-          {saving ? 'Guardando…' : 'Guardar cambios'}
+          {saving ? t('common.saving') : t('common.saveChanges')}
         </Button>
       </div>
     </div>

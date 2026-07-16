@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { useI18n } from '@/lib/i18n'
 
 type CurrencyCode = 'USD' | 'VES' | 'BRL'
 type RateSource = 'AUTO_BCV' | 'AUTO_FOREX' | 'MANUAL'
@@ -34,6 +35,7 @@ const SOURCE_LABELS: Record<RateSource, string> = {
 const ALL_CURRENCIES: CurrencyCode[] = ['USD', 'VES', 'BRL']
 
 export default function DailyRatesPage() {
+  const { t } = useI18n()
   const [loading, setLoading] = useState(true)
   const [rates, setRates] = useState<ExchangeRate[]>([])
   const [saving, setSaving] = useState(false)
@@ -45,11 +47,11 @@ export default function DailyRatesPage() {
   async function loadRates() {
     try {
       const res = await fetch('/api/rates')
-      if (!res.ok) throw new Error('Error al cargar')
+      if (!res.ok) throw new Error(t('common.errorLoading'))
       const json = await res.json()
       setRates(json.data)
     } catch {
-      toast.error('No se pudo cargar las tasas del día')
+      toast.error(t('rates.loadError'))
     } finally {
       setLoading(false)
     }
@@ -57,12 +59,13 @@ export default function DailyRatesPage() {
 
   useEffect(() => {
     loadRates()
+  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!form.rate || isNaN(Number(form.rate)) || Number(form.rate) <= 0) {
-      toast.error('Ingresa una tasa válida mayor a cero')
+      toast.error(t('rates.invalidRate'))
       return
     }
     setSaving(true)
@@ -73,12 +76,12 @@ export default function DailyRatesPage() {
         body: JSON.stringify({ currency: form.currency, rate: form.rate }),
       })
       const json = await res.json()
-      if (!res.ok) throw new Error(json.error || 'Error al guardar')
-      toast.success(`Tasa ${form.currency} actualizada`)
+      if (!res.ok) throw new Error(json.error || t('common.errorSaving'))
+      toast.success(`${t('rates.updated')} ${form.currency}`)
       setForm((p) => ({ ...p, rate: '' }))
       await loadRates()
     } catch (e: unknown) {
-      toast.error(e instanceof Error ? e.message : 'Error al guardar')
+      toast.error(e instanceof Error ? e.message : t('common.errorSaving'))
     } finally {
       setSaving(false)
     }
@@ -87,9 +90,9 @@ export default function DailyRatesPage() {
   return (
     <div className="flex flex-col gap-6 p-6" data-tour="daily-rates">
       <div>
-        <h1 className="text-2xl font-bold text-white">Tasas del Día</h1>
+        <h1 className="text-2xl font-bold text-white">{t('rates.dayTitle')}</h1>
         <p className="text-sm text-zinc-400">
-          Consulta o sobreescribe manualmente la tasa de cambio de hoy
+          {t('rates.dayDesc')}
         </p>
       </div>
 
@@ -98,7 +101,7 @@ export default function DailyRatesPage() {
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <TrendingUp className="h-4 w-4 text-emerald-400" />
-            Tasas actuales (hoy)
+            {t('rates.currentTitle')}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -110,15 +113,15 @@ export default function DailyRatesPage() {
             </div>
           ) : rates.length === 0 ? (
             <p className="text-sm text-zinc-400 py-4 text-center">
-              No hay tasas registradas para hoy. Agrega una manualmente.
+              {t('rates.noRates')}
             </p>
           ) : (
             <table className="w-full text-sm">
               <thead>
                 <tr className="text-zinc-400 border-b border-zinc-800">
-                  <th className="pb-2 text-left font-medium">Moneda</th>
-                  <th className="pb-2 text-right font-medium">Tasa (vs USD base)</th>
-                  <th className="pb-2 text-right font-medium">Fuente</th>
+                  <th className="pb-2 text-left font-medium">{t('rates.currency')}</th>
+                  <th className="pb-2 text-right font-medium">{t('rates.rateVsUsd')}</th>
+                  <th className="pb-2 text-right font-medium">{t('rates.source')}</th>
                 </tr>
               </thead>
               <tbody>
@@ -154,14 +157,14 @@ export default function DailyRatesPage() {
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <RefreshCw className="h-4 w-4 text-emerald-400" />
-            Sobrescribir tasa manualmente
+            {t('rates.overrideTitle')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label className="text-zinc-300">Moneda</Label>
+                <Label className="text-zinc-300">{t('rates.currency')}</Label>
                 <div className="flex gap-2 flex-wrap">
                   {ALL_CURRENCIES.map((c) => (
                     <button
@@ -182,7 +185,7 @@ export default function DailyRatesPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="rate-input" className="text-zinc-300">
-                  Tasa (valor en {form.currency} por 1 USD base)
+                  {t('rates.rateInputLabel').replace('{currency}', form.currency)}
                 </Label>
                 <Input
                   id="rate-input"
@@ -203,10 +206,10 @@ export default function DailyRatesPage() {
                 disabled={saving || !form.rate}
                 className="bg-emerald-500 hover:bg-emerald-600 text-white"
               >
-                {saving ? 'Guardando…' : 'Guardar tasa'}
+                {saving ? t('common.saving') : t('rates.saveRate')}
               </Button>
               <p className="text-xs text-zinc-500">
-                Sobrescribe la tasa automática y la marca como &quot;Manual&quot;
+                {t('rates.overrideNote')}
               </p>
             </div>
           </form>
