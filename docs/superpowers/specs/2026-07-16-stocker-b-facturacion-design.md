@@ -94,6 +94,17 @@ Añadir relación inversa `customers Customer[]` en `Business`.
   phone   String?
   taxId   String?   // dato del negocio (no fiscal)
 ```
+Logo por defecto del sistema: `public/stocker-icon.png` (exportado del logo de Stocker) cuando el
+tenant no ha subido `logoUrl`.
+
+### 4.4b Impuesto configurable por tenant (en `Business`)
+```prisma
+  taxEnabled     Boolean @default(false)   // el cliente decide si su comprobante muestra impuesto
+  defaultTaxRate Decimal @default(0) @db.Decimal(5, 2)  // % por defecto si el producto no trae vatRate
+  taxLabel       String  @default("IVA")   // etiqueta libre: IVA / Imposto / Tax...
+```
+El sistema se adapta a cada cliente: quien no factura impuesto lo deja apagado (`taxEnabled=false`,
+total=subtotal); quien sí, define su tasa y etiqueta. Editable en Ajustes → Negocio.
 
 ### 4.5 Aplicación a DB
 `prisma db push` contra la Supabase comercial (aditivo). Sin pérdida de datos.
@@ -114,8 +125,11 @@ export function computeTotals(lines: SaleLineInput[], taxEnabled: boolean): Sale
 ```
 Reglas:
 - `subtotal` = Σ(quantity × unitPrice) con `Decimal`.
-- `tax` = taxEnabled ? Σ(line_subtotal × vatRate/100) : 0.
+- `tax` = taxEnabled ? Σ(line_subtotal × rate/100) : 0, donde `rate` = `line.vatRate` si viene, si no
+  la `defaultTaxRate` del tenant.
 - `total` = subtotal + tax.
+- `taxEnabled` y `defaultTaxRate` provienen de la config del tenant (§4.4b); el impuesto es informativo
+  (no fiscal). La etiqueta (`taxLabel`) se usa solo al presentar/PDF.
 Casos de prueba: sin impuesto (total=subtotal); con impuesto por línea; líneas mixtas; cantidades
 decimales; redondeo por moneda (reusa `formatMoney`/decimales del Bloque A al presentar).
 
@@ -165,7 +179,8 @@ export async function issueDocument(prisma, orderId): Promise<{ docNumber: strin
 3. **POS**: al cerrar/cobrar una orden, botón **"Comprobante"** → abre `GET /api/sales/[orderId]/pdf`.
 4. **Historial de ventas**: en cada orden emitida, botón para **re-descargar** el PDF (mismo endpoint,
    idempotente).
-5. **Ajustes → Negocio**: editar branding (`logoUrl`, `address`, `phone`, `taxId`) y `docPrefix`.
+5. **Ajustes → Negocio**: editar branding (`logoUrl`, `address`, `phone`, `taxId`), `docPrefix`, y la
+   **config de impuesto** (`taxEnabled`, `defaultTaxRate`, `taxLabel`).
 
 ---
 
