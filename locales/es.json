@@ -96,7 +96,16 @@
     "notActive": "Módulo no activo",
     "notActiveDesc": "Este módulo no está incluido en tu plan. Contáctanos para activarlo.",
     "catalog": "Catálogo de módulos",
-    "addon": "Complemento"
+    "addon": "Complemento",
+    "title": "Módulos",
+    "configDesc": "Configura los módulos adicionales y su disponibilidad por plan",
+    "active": "Activo",
+    "addonPrice": "Precio add-on",
+    "currency": "Moneda",
+    "includedInPlans": "Incluido en planes",
+    "updated": "Módulo actualizado",
+    "loadError": "Error al cargar módulos",
+    "saveError": "Error al guardar módulo"
   },
   "invoicing": {
     "newInvoice": "Nueva factura",

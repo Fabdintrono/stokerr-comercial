@@ -9,6 +9,7 @@ import { Loader2, Save, Package } from "lucide-react";
 import toast from "react-hot-toast";
 import { MODULE_KEYS, MODULE_REGISTRY } from "@/lib/modules/registry";
 import type { ModuleKey } from "@/lib/modules/registry";
+import { useI18n } from "@/lib/i18n";
 
 const PLANS = ["STARTER", "GROWTH", "ENTERPRISE"] as const;
 type Plan = (typeof PLANS)[number];
@@ -27,6 +28,7 @@ export default function SuperAdminModulesPage() {
   const [configs, setConfigs] = useState<ModuleConfig[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<ModuleKey | null>(null);
+  const { t } = useI18n();
 
   const fetchModules = useCallback(async () => {
     try {
@@ -52,11 +54,11 @@ export default function SuperAdminModulesPage() {
       });
       setConfigs(merged);
     } catch {
-      toast.error("Error al cargar módulos");
+      toast.error(t('modules.loadError'));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     fetchModules();
@@ -98,9 +100,9 @@ export default function SuperAdminModulesPage() {
         }),
       });
       if (!res.ok) throw new Error();
-      toast.success("Módulo actualizado");
+      toast.success(t('modules.updated'));
     } catch {
-      toast.error("Error al guardar módulo");
+      toast.error(t('modules.saveError'));
     } finally {
       setSaving(null);
     }
@@ -109,9 +111,9 @@ export default function SuperAdminModulesPage() {
   return (
     <div className="space-y-4 p-4 lg:p-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Módulos</h1>
+        <h1 className="text-2xl font-bold text-white">{t('modules.title')}</h1>
         <p className="text-zinc-400 text-sm mt-1">
-          Configura los módulos adicionales y su disponibilidad por plan
+          {t('modules.configDesc')}
         </p>
       </div>
 
@@ -143,7 +145,7 @@ export default function SuperAdminModulesPage() {
 
                   {/* Right: active toggle */}
                   <div className="flex items-center gap-2 shrink-0">
-                    <span className="text-xs text-zinc-500">Activo</span>
+                    <span className="text-xs text-zinc-500">{t('modules.active')}</span>
                     <Switch
                       checked={cfg.active}
                       onCheckedChange={(v) => updateLocal(cfg.key, { active: v })}
@@ -155,7 +157,7 @@ export default function SuperAdminModulesPage() {
                 <div className="mt-4 flex flex-wrap items-end gap-4">
                   {/* Price */}
                   <div className="flex flex-col gap-1">
-                    <span className="text-xs text-zinc-500">Precio add-on</span>
+                    <span className="text-xs text-zinc-500">{t('modules.addonPrice')}</span>
                     <Input
                       type="number"
                       min={0}
@@ -170,7 +172,7 @@ export default function SuperAdminModulesPage() {
 
                   {/* Currency */}
                   <div className="flex flex-col gap-1">
-                    <span className="text-xs text-zinc-500">Moneda</span>
+                    <span className="text-xs text-zinc-500">{t('modules.currency')}</span>
                     <div className="flex gap-1">
                       {(["USD", "VES", "BRL"] as const).map((c) => (
                         <button
@@ -190,7 +192,7 @@ export default function SuperAdminModulesPage() {
 
                   {/* Plans */}
                   <div className="flex flex-col gap-1">
-                    <span className="text-xs text-zinc-500">Incluido en planes</span>
+                    <span className="text-xs text-zinc-500">{t('modules.includedInPlans')}</span>
                     <div className="flex gap-2 flex-wrap">
                       {PLANS.map((plan) => (
                         <label key={plan} className="flex items-center gap-1.5 cursor-pointer">
@@ -218,7 +220,7 @@ export default function SuperAdminModulesPage() {
                     ) : (
                       <Save className="h-3 w-3 mr-1" />
                     )}
-                    Guardar
+                    {t('common.save')}
                   </Button>
                 </div>
               </CardContent>

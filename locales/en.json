@@ -96,7 +96,16 @@
     "notActive": "Module not active",
     "notActiveDesc": "This module is not included in your plan. Contact us to enable it.",
     "catalog": "Module catalog",
-    "addon": "Add-on"
+    "addon": "Add-on",
+    "title": "Modules",
+    "configDesc": "Configure additional modules and their availability by plan",
+    "active": "Active",
+    "addonPrice": "Add-on price",
+    "currency": "Currency",
+    "includedInPlans": "Included in plans",
+    "updated": "Module updated",
+    "loadError": "Error loading modules",
+    "saveError": "Error saving module"
   },
   "invoicing": {
     "newInvoice": "New invoice",
