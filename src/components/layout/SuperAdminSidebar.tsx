@@ -14,6 +14,7 @@ import {
   Settings,
   LogOut,
   X,
+  Package,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -21,6 +22,7 @@ const navItems = [
   { key: "clients", icon: Store, label: "Clientes", href: "/super-admin/clients" },
   { key: "subscriptions", icon: CreditCard, label: "Suscripciones", href: "/super-admin/subscriptions" },
   { key: "licenses", icon: Users, label: "Licencias", href: "/super-admin/licenses" },
+  { key: "modules", icon: Package, label: "Módulos", href: "/super-admin/modules" },
   { key: "support", icon: LifeBuoy, label: "Soporte", href: "/super-admin/support" },
   { key: "analytics", icon: BarChart3, label: "Analytics", href: "/super-admin/analytics" },
   { key: "settings", icon: Settings, label: "Configuración", href: "/super-admin/settings" },
