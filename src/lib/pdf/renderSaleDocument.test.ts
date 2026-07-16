@@ -13,6 +13,7 @@ describe('renderSaleDocument', () => {
       labels: {
         voucher: 'VOUCHER', customer: 'Customer', quantity: 'Qty', unitPrice: 'Price',
         total: 'Total', description: 'Description', subtotal: 'Subtotal', tax: 'Tax',
+        nonFiscal: 'Non-fiscal document', rate: 'Rate', equiv: 'Equiv.',
       },
     })
     expect(buf.length).toBeGreaterThan(500)

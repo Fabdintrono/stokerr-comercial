@@ -185,7 +185,7 @@ export default function DailyRatesPage() {
 
               <div className="space-y-2">
                 <Label htmlFor="rate-input" className="text-zinc-300">
-                  {t('rates.rateInputLabel').replace('{currency}', form.currency)}
+                  {t('rates.rateInputLabel', { currency: form.currency })}
                 </Label>
                 <Input
                   id="rate-input"

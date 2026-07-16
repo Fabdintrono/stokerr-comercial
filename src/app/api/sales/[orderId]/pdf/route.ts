@@ -77,6 +77,9 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ orde
       description: tServer(locale, 'common.description'),
       subtotal: tServer(locale, 'invoicing.subtotal'),
       tax: tServer(locale, 'invoicing.tax'),
+      nonFiscal: tServer(locale, 'invoicing.nonFiscal'),
+      rate: tServer(locale, 'invoicing.rate'),
+      equiv: tServer(locale, 'invoicing.equiv'),
     },
   }
 

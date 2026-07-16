@@ -22,5 +22,8 @@ export interface SaleDocumentData {
     description: string
     subtotal: string
     tax: string
+    nonFiscal: string
+    rate: string
+    equiv: string
   }
 }

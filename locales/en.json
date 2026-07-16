@@ -135,7 +135,10 @@
     "nameRequired": "Name is required",
     "customerCreated": "Customer created",
     "noCustomers": "No customers.",
-    "totalLabel": "Total: {amount}"
+    "totalLabel": "Total: {amount}",
+    "nonFiscal": "Non-fiscal document",
+    "rate": "Rate",
+    "equiv": "Equiv."
   },
   "settings": {
     "branding": "Branding",
@@ -176,4 +179,3 @@
     "notifTransferDesc": "Alerts when a transfer is completed"
   }
 }
-

@@ -135,7 +135,10 @@
     "nameRequired": "Nome obrigatório",
     "customerCreated": "Cliente criado",
     "noCustomers": "Sem clientes.",
-    "totalLabel": "Total: {amount}"
+    "totalLabel": "Total: {amount}",
+    "nonFiscal": "Documento não fiscal",
+    "rate": "Taxa",
+    "equiv": "Equiv."
   },
   "settings": {
     "branding": "Marca",

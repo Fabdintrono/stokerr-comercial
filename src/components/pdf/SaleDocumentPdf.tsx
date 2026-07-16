@@ -65,11 +65,11 @@ export function SaleDocumentPdf({ data }: { data: SaleDocumentData }) {
           <View style={s.totalRow}><Text>{data.labels.subtotal}</Text><Text>{data.subtotal}</Text></View>
           {data.tax !== '0' ? <View style={s.totalRow}><Text>{data.taxLabel}</Text><Text>{data.tax}</Text></View> : null}
           <View style={s.totalRow}><Text style={s.grand}>{data.labels.total}</Text><Text style={s.grand}>{data.total}</Text></View>
-          {data.totalSecondary ? <View style={s.totalRow}><Text style={s.muted}>Equiv. {data.secondaryCurrency}</Text><Text style={s.muted}>{data.totalSecondary}</Text></View> : null}
-          {data.rate ? <View style={s.totalRow}><Text style={s.muted}>Tasa</Text><Text style={s.muted}>{data.rate}</Text></View> : null}
+          {data.totalSecondary ? <View style={s.totalRow}><Text style={s.muted}>{data.labels.equiv} {data.secondaryCurrency}</Text><Text style={s.muted}>{data.totalSecondary}</Text></View> : null}
+          {data.rate ? <View style={s.totalRow}><Text style={s.muted}>{data.labels.rate}</Text><Text style={s.muted}>{data.rate}</Text></View> : null}
         </View>
 
-        <Text style={s.footer}>Documento no fiscal — {data.business.name}</Text>
+        <Text style={s.footer}>{data.labels.nonFiscal} — {data.business.name}</Text>
       </Page>
     </Document>
   )
