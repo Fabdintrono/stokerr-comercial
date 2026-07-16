@@ -211,8 +211,9 @@ Cliente aislado en `src/lib/billing/nowpayments.ts` (interfaz `createPayment`, `
 ---
 
 ## 12. Riesgos / decisiones abiertas
-- **Cuenta NOWPayments de Stocker:** requiere su propia API key + IPN secret (no reusar la de Eluvex).
-  A cargar en env al desplegar. Referencia de integración: [[reference_nowpayments]].
+- **Cuenta NOWPayments:** se REUSA la cuenta de Eluvex (misma API key + IPN secret; ver
+  [[reference_nowpayments]]). Los pagos de Stocker y Eluvex caen en la misma cuenta; se distinguen por
+  `order_id` (businessId) y el contexto. Env: `NOWPAYMENTS_API_KEY`, `NOWPAYMENTS_IPN_SECRET`.
 - **`pay_currency`:** se fija `usdttrc20` por costo bajo; se puede permitir elección en NOWPayments.
 - **Reloj/zona horaria:** todo en UTC; `deriveStatus` recibe `now` inyectable (testeable).
 - **Add-on prices:** se usa `priceAtActivation` (congelado en D1) para que el monto sea estable; si es
