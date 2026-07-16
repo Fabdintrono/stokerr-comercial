@@ -7,6 +7,8 @@ import { Search, Key, Building2, CheckCircle, XCircle, Loader2, Save } from "luc
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import toast from "react-hot-toast";
+import { MODULE_KEYS, MODULE_REGISTRY } from "@/lib/modules/registry";
+import type { ModuleKey } from "@/lib/modules/registry";
 
 interface Client {
   id: string;
@@ -34,6 +36,8 @@ export default function LicensesPage() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editForm, setEditForm] = useState({ plan: "", maxRestaurants: 0, maxUsers: 0 });
   const [saving, setSaving] = useState(false);
+  const [effectiveModules, setEffectiveModules] = useState<ModuleKey[]>([]);
+  const [modulesLoading, setModulesLoading] = useState(false);
 
   const fetchClients = useCallback(async () => {
     try {
@@ -50,9 +54,41 @@ export default function LicensesPage() {
 
   useEffect(() => { fetchClients(); }, [fetchClients]);
 
-  const startEdit = (client: Client) => {
+  const startEdit = async (client: Client) => {
     setEditingId(client.id);
     setEditForm({ plan: client.plan, maxRestaurants: client.maxRestaurants, maxUsers: client.maxUsers });
+    setEffectiveModules([]);
+    setModulesLoading(true);
+    try {
+      const res = await fetch(`/api/admin/clients/${client.id}/modules`);
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setEffectiveModules(data.effective ?? []);
+    } catch {
+      toast.error("Error al cargar módulos del cliente");
+    } finally {
+      setModulesLoading(false);
+    }
+  };
+
+  const toggleClientModule = async (clientId: string, moduleKey: ModuleKey, enabled: boolean) => {
+    try {
+      const res = await fetch(`/api/admin/clients/${clientId}/modules`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ moduleKey, enabled }),
+      });
+      if (!res.ok) throw new Error();
+      toast.success(enabled ? "Módulo activado" : "Módulo desactivado");
+      // Reload effective modules
+      const updated = await fetch(`/api/admin/clients/${clientId}/modules`);
+      if (updated.ok) {
+        const data = await updated.json();
+        setEffectiveModules(data.effective ?? []);
+      }
+    } catch {
+      toast.error("Error al actualizar módulo");
+    }
   };
 
   const saveEdit = async (id: string) => {
@@ -166,6 +202,7 @@ export default function LicensesPage() {
                         </div>
 
                         {isEditing ? (
+                          <>
                           <div className="flex items-center gap-2 mt-2 flex-wrap">
                             <Select value={editForm.plan} onValueChange={(v) => setEditForm((p) => ({ ...p, plan: v }))}>
                               <SelectTrigger className="w-[130px] h-8 text-xs">
@@ -215,6 +252,39 @@ export default function LicensesPage() {
                               Cancelar
                             </Button>
                           </div>
+
+                          {/* Módulos section */}
+                          <div className="mt-4 border-t border-zinc-800 pt-3">
+                            <p className="text-xs font-semibold text-zinc-400 mb-2">Módulos</p>
+                            {modulesLoading ? (
+                              <Loader2 className="h-4 w-4 animate-spin text-zinc-500" />
+                            ) : (
+                              <div className="flex flex-wrap gap-3">
+                                {MODULE_KEYS.map((k) => {
+                                  const active = effectiveModules.includes(k);
+                                  return (
+                                    <label
+                                      key={k}
+                                      className="flex items-center gap-1.5 cursor-pointer"
+                                    >
+                                      <input
+                                        type="checkbox"
+                                        checked={active}
+                                        onChange={() =>
+                                          toggleClientModule(client.id, k, !active)
+                                        }
+                                        className="w-3.5 h-3.5 accent-emerald-500"
+                                      />
+                                      <span className="text-xs text-zinc-300">
+                                        {MODULE_REGISTRY[k].label}
+                                      </span>
+                                    </label>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                          </>
                         ) : (
                           <>
                             <div className="flex items-center gap-2 mt-1">
