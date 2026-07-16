@@ -2,6 +2,8 @@
 import { usePathname, useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 import { useSubscription } from './SubscriptionProvider'
+import { useI18n } from '@/lib/i18n'
+import { formatDate } from '@/lib/i18n/format'
 
 const ALLOW = ['/billing', '/login', '/select-business']
 
@@ -9,6 +11,7 @@ export function SubscriptionGate({ children }: { children: React.ReactNode }) {
   const { sub, loading } = useSubscription()
   const pathname = usePathname()
   const router = useRouter()
+  const { t, locale } = useI18n()
   const exempt = ALLOW.some(p => pathname?.startsWith(p)) || pathname?.startsWith('/super-admin')
 
   useEffect(() => {
@@ -19,8 +22,10 @@ export function SubscriptionGate({ children }: { children: React.ReactNode }) {
     <>
       {sub?.status === 'GRACE' && !exempt && (
         <div className="bg-amber-500/15 border-b border-amber-500/30 text-amber-300 text-sm px-4 py-2 text-center">
-          Tu suscripción venció. Paga antes de que termine el período de gracia para no perder acceso.{' '}
-          <a href="/billing" className="underline font-medium">Pagar ahora</a>
+          {sub.currentPeriodEnd
+            ? t('billing.graceBanner', { date: formatDate(new Date(sub.currentPeriodEnd), locale) })
+            : t('billing.expiredBanner')}{' '}
+          <a href="/billing" className="underline font-medium">{t('billing.payNow')}</a>
         </div>
       )}
       {children}

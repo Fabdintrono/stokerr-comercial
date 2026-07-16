@@ -37,7 +37,12 @@
     "statusGrace": "Em período de carência",
     "statusExpired": "Expirada",
     "graceBanner": "Sua assinatura está em período de carência. Renove antes de {date}.",
-    "expiredBanner": "Sua assinatura expirou. Renove para continuar usando o Stocker."
+    "expiredBanner": "Sua assinatura expirou. Renove para continuar usando o Stocker.",
+    "monthlyTotal": "Total mensal",
+    "redirecting": "Redirecionando…",
+    "payError": "Erro ao iniciar o pagamento",
+    "payNote": "Pagamento seguro em USDT (TRC-20) via NOWPayments",
+    "payNow": "Pagar agora"
   },
   "currency": {
     "title": "Moedas",

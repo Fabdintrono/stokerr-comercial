@@ -37,7 +37,12 @@
     "statusGrace": "In grace period",
     "statusExpired": "Expired",
     "graceBanner": "Your subscription is in its grace period. Renew before {date}.",
-    "expiredBanner": "Your subscription has expired. Renew to keep using Stocker."
+    "expiredBanner": "Your subscription has expired. Renew to keep using Stocker.",
+    "monthlyTotal": "Monthly total",
+    "redirecting": "Redirecting…",
+    "payError": "Error starting payment",
+    "payNote": "Secure USDT (TRC-20) payment via NOWPayments",
+    "payNow": "Pay now"
   },
   "currency": {
     "title": "Currencies",

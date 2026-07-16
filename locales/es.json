@@ -37,7 +37,12 @@
     "statusGrace": "En período de gracia",
     "statusExpired": "Vencida",
     "graceBanner": "Tu suscripción está en período de gracia. Renueva antes de {date}.",
-    "expiredBanner": "Tu suscripción venció. Renueva para seguir usando Stocker."
+    "expiredBanner": "Tu suscripción venció. Renueva para seguir usando Stocker.",
+    "monthlyTotal": "Total mensual",
+    "redirecting": "Redirigiendo…",
+    "payError": "Error al iniciar el pago",
+    "payNote": "Pago seguro en USDT (TRC-20) vía NOWPayments",
+    "payNow": "Pagar ahora"
   },
   "currency": {
     "title": "Monedas",
