@@ -69,6 +69,11 @@ enum RateSource {
   MANUAL
 }
 
+enum ModuleSource {
+  PLAN
+  ADDON
+}
+
 // ============================================
 // USER & AUTH
 // ============================================
@@ -134,6 +139,7 @@ model Business {
   replenishmentRequests ReplenishmentRequest[]
   notifications        Notification[]
   exchangeRates        ExchangeRate[]
+  tenantModules        TenantModule[]
 
   @@map("businesses")
 }
@@ -151,6 +157,39 @@ model ExchangeRate {
   @@unique([businessId, currency, date])
   @@index([businessId, currency, date])
   @@map("exchange_rates")
+}
+
+model Module {
+  id              String   @id @default(cuid())
+  key             String   @unique
+  name            String
+  description     String?
+  addOnPrice      Decimal  @default(0) @db.Decimal(18, 2)
+  priceCurrency   Currency @default(USD)
+  includedInPlans Plan[]   @default([])
+  active          Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  tenantModules TenantModule[]
+  @@map("modules")
+}
+
+model TenantModule {
+  id                String       @id @default(cuid())
+  businessId        String
+  business          Business     @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  moduleKey         String
+  enabled           Boolean      @default(true)
+  source            ModuleSource @default(ADDON)
+  priceAtActivation Decimal?     @db.Decimal(18, 2)
+  activatedAt       DateTime     @default(now())
+
+  module Module @relation(fields: [moduleKey], references: [key], onDelete: Cascade)
+
+  @@unique([businessId, moduleKey])
+  @@index([businessId])
+  @@map("tenant_modules")
 }
 
 model UserBusiness {
