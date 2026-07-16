@@ -736,6 +736,22 @@ async function main() {
 
   console.log('✅ Configuración creada');
 
+  // Módulos (catálogo) — sembrados desde el registro de código
+  console.log('🧩 Creando catálogo de módulos...');
+  const moduleSeed = [
+    { key: 'FINANCE', name: 'Finanzas', description: 'Contabilidad, gastos, flujo de caja' },
+    { key: 'BI', name: 'BI / Analytics', description: 'Dashboards y reportes avanzados' },
+    { key: 'CRM', name: 'CRM', description: 'Clientes, seguimiento, campañas' },
+  ];
+  for (const m of moduleSeed) {
+    await prisma.module.upsert({
+      where: { key: m.key },
+      update: {},
+      create: { key: m.key, name: m.name, description: m.description, addOnPrice: 0, includedInPlans: [], active: true },
+    });
+  }
+  console.log('✅ Catálogo de módulos creado');
+
   console.log('🎉 Seed completado con éxito!');
   console.log('\n📋 Credenciales de prueba:');
   console.log('   Admin: admin@stocker.pt / admin123');
