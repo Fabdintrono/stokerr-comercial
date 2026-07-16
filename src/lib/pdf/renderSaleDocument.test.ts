@@ -10,6 +10,10 @@ describe('renderSaleDocument', () => {
       anchorCurrency: 'USD', secondaryCurrency: null, rate: null,
       subtotal: '$20.00', tax: '0', taxLabel: 'IVA', total: '$20.00', totalSecondary: null,
       docNumber: 'F-000001', issuedAt: '2026-07-16',
+      labels: {
+        voucher: 'VOUCHER', customer: 'Customer', quantity: 'Qty', unitPrice: 'Price',
+        total: 'Total', description: 'Description', subtotal: 'Subtotal', tax: 'Tax',
+      },
     })
     expect(buf.length).toBeGreaterThan(500)
     expect(buf.slice(0, 4).toString()).toBe('%PDF')

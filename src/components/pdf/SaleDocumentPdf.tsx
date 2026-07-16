@@ -32,7 +32,7 @@ export function SaleDocumentPdf({ data }: { data: SaleDocumentData }) {
             </View>
           </View>
           <View style={{ textAlign: 'right' }}>
-            <Text style={s.h1}>COMPROBANTE</Text>
+            <Text style={s.h1}>{data.labels.voucher}</Text>
             <Text>{data.docNumber}</Text>
             <Text style={s.muted}>{data.issuedAt}</Text>
           </View>
@@ -40,17 +40,17 @@ export function SaleDocumentPdf({ data }: { data: SaleDocumentData }) {
 
         {data.customer ? (
           <View style={s.box}>
-            <Text style={{ fontWeight: 700 }}>Cliente</Text>
+            <Text style={{ fontWeight: 700 }}>{data.labels.customer}</Text>
             <Text>{data.customer.name}{data.customer.taxId ? ` — ${data.customer.taxId}` : ''}</Text>
             {data.customer.address ? <Text style={s.muted}>{data.customer.address}</Text> : null}
           </View>
         ) : null}
 
         <View style={s.th}>
-          <Text style={s.cDesc}>Descripción</Text>
-          <Text style={s.cQty}>Cant</Text>
-          <Text style={s.cPrice}>Precio</Text>
-          <Text style={s.cTot}>Total</Text>
+          <Text style={s.cDesc}>{data.labels.description}</Text>
+          <Text style={s.cQty}>{data.labels.quantity}</Text>
+          <Text style={s.cPrice}>{data.labels.unitPrice}</Text>
+          <Text style={s.cTot}>{data.labels.total}</Text>
         </View>
         {data.lines.map((l, i) => (
           <View style={s.td} key={i}>
@@ -62,9 +62,9 @@ export function SaleDocumentPdf({ data }: { data: SaleDocumentData }) {
         ))}
 
         <View style={s.totals}>
-          <View style={s.totalRow}><Text>Subtotal</Text><Text>{data.subtotal}</Text></View>
+          <View style={s.totalRow}><Text>{data.labels.subtotal}</Text><Text>{data.subtotal}</Text></View>
           {data.tax !== '0' ? <View style={s.totalRow}><Text>{data.taxLabel}</Text><Text>{data.tax}</Text></View> : null}
-          <View style={s.totalRow}><Text style={s.grand}>Total</Text><Text style={s.grand}>{data.total}</Text></View>
+          <View style={s.totalRow}><Text style={s.grand}>{data.labels.total}</Text><Text style={s.grand}>{data.total}</Text></View>
           {data.totalSecondary ? <View style={s.totalRow}><Text style={s.muted}>Equiv. {data.secondaryCurrency}</Text><Text style={s.muted}>{data.totalSecondary}</Text></View> : null}
           {data.rate ? <View style={s.totalRow}><Text style={s.muted}>Tasa</Text><Text style={s.muted}>{data.rate}</Text></View> : null}
         </View>

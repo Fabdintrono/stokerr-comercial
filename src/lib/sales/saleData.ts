@@ -13,4 +13,14 @@ export interface SaleDocumentData {
   totalSecondary?: string | null
   docNumber: string
   issuedAt: string
+  labels: {
+    voucher: string
+    customer: string
+    quantity: string
+    unitPrice: string
+    total: string
+    description: string
+    subtotal: string
+    tax: string
+  }
 }

@@ -7,12 +7,18 @@ import { issueDocument } from '@/lib/sales/issue'
 import { renderSaleDocument } from '@/lib/pdf/renderSaleDocument'
 import { formatMoney, convert, CurrencyCode } from '@/lib/currency'
 import type { SaleDocumentData } from '@/lib/sales/saleData'
+import { tServer } from '@/lib/i18n/tServer'
+import { normalizeLocale } from '@/lib/i18n/normalizeLocale'
 
 export const runtime = 'nodejs'
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ orderId: string }> }) {
   const session = await getServerSession(authOptions)
   if (!session) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
+  const dbUser = session?.user?.id
+    ? await prisma.user.findUnique({ where: { id: session.user.id }, select: { language: true } })
+    : null
+  const locale = normalizeLocale(dbUser?.language)
   const { orderId } = await params
   const businessId = req.headers.get('X-Business-Id') || req.cookies.get('businessId')?.value
 
@@ -62,6 +68,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ orde
     totalSecondary: secondary ? formatMoney(convert(total, anchor, secondary, rates), secondary) : null,
     docNumber,
     issuedAt: issuedAt.toISOString().slice(0, 10),
+    labels: {
+      voucher: tServer(locale, 'invoicing.voucher'),
+      customer: tServer(locale, 'invoicing.customer'),
+      quantity: tServer(locale, 'invoicing.quantity'),
+      unitPrice: tServer(locale, 'invoicing.unitPrice'),
+      total: tServer(locale, 'invoicing.total'),
+      description: tServer(locale, 'common.description'),
+      subtotal: tServer(locale, 'invoicing.subtotal'),
+      tax: tServer(locale, 'invoicing.tax'),
+    },
   }
 
   const buffer = await renderSaleDocument(data)
