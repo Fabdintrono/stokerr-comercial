@@ -29,7 +29,13 @@
     "password": "Password",
     "loginTitle": "Log in to your account",
     "loginError": "Invalid credentials",
-    "language": "Language"
+    "language": "Language",
+    "loginSubtitle": "Enter your credentials to continue",
+    "loginLoading": "Signing in...",
+    "loginButton": "Sign in",
+    "noAccount": "Don't have an account?",
+    "register": "Sign up",
+    "loginErrorGeneral": "Error signing in"
   },
   "billing": {
     "title": "My subscription",
@@ -138,6 +144,36 @@
     "taxLabel": "Tax label",
     "taxRate": "Tax rate (%)",
     "docPrefix": "Receipt prefix",
-    "saved": "Settings saved"
+    "saved": "Settings saved",
+    "title": "Settings",
+    "subtitle": "Your account and warehouse preferences",
+    "profile": "Profile",
+    "warehouseManager": "Warehouse Manager",
+    "notifications": "Notifications",
+    "security": "Security",
+    "business": "Business / Receipts",
+    "logoUrl": "Logo URL",
+    "address": "Address",
+    "phone": "Phone",
+    "taxId": "Tax ID",
+    "docPrefixLabel": "Receipt prefix",
+    "taxLabelField": "Tax label",
+    "taxRateField": "Tax rate (%)",
+    "taxEnabledLabel": "Tax enabled",
+    "taxEnabledDesc": "Apply tax rate when issuing receipts",
+    "saveConfig": "Save configuration",
+    "configSaved": "Configuration saved",
+    "configError": "Error saving",
+    "currentPassword": "Current password",
+    "newPassword": "New password",
+    "confirmPassword": "Confirm password",
+    "changePassword": "Change password",
+    "notifLowStock": "Low stock alerts",
+    "notifLowStockDesc": "Receive alerts when a product falls below the minimum",
+    "notifNewInvoice": "New invoices",
+    "notifNewInvoiceDesc": "Notifications when new supplier invoices are received",
+    "notifTransfer": "Completed transfers",
+    "notifTransferDesc": "Alerts when a transfer is completed"
   }
 }
+

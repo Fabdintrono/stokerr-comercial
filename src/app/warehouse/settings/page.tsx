@@ -8,6 +8,7 @@ import { useAuth } from "@/components/providers/AuthProvider";
 import { Settings, User, Bell, Shield, Building2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { useI18n } from "@/lib/i18n";
 
 interface BusinessProfile {
   logoUrl?: string | null;
@@ -22,6 +23,7 @@ interface BusinessProfile {
 
 export default function SettingsPage() {
   const { user } = useAuth();
+  const { t } = useI18n();
   const [profile, setProfile] = useState<BusinessProfile>({
     logoUrl: '', address: '', phone: '', taxId: '',
     docPrefix: 'F-', taxEnabled: false, defaultTaxRate: 0, taxLabel: 'IVA',
@@ -40,15 +42,15 @@ export default function SettingsPage() {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ ...profile, defaultTaxRate: Number(profile.defaultTaxRate) }),
     });
-    if (res.ok) toast.success('Configuración guardada');
-    else toast.error('Error al guardar');
+    if (res.ok) toast.success(t('settings.configSaved'));
+    else toast.error(t('settings.configError'));
   }
 
   return (
     <div className="flex flex-col gap-6 p-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Configuración</h1>
-        <p className="text-sm text-zinc-400">Preferencias de tu cuenta y del depósito</p>
+        <h1 className="text-2xl font-bold text-white">{t('settings.title')}</h1>
+        <p className="text-sm text-zinc-400">{t('settings.subtitle')}</p>
       </div>
 
       {/* Profile */}
@@ -56,7 +58,7 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <User className="h-4 w-4 text-emerald-400" />
-            Perfil
+            {t('settings.profile')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -69,19 +71,19 @@ export default function SettingsPage() {
             <div>
               <p className="font-medium text-white">{user?.name}</p>
               <p className="text-sm text-zinc-400">{user?.email}</p>
-              <p className="text-xs text-emerald-400 mt-0.5">Gestor de Depósito</p>
+              <p className="text-xs text-emerald-400 mt-0.5">{t('settings.warehouseManager')}</p>
             </div>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label className="text-zinc-300">Nombre</Label>
+              <Label className="text-zinc-300">{t('common.name')}</Label>
               <Input
                 defaultValue={user?.name || ""}
                 className="bg-zinc-800/50 border-zinc-700 text-white"
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-zinc-300">Email</Label>
+              <Label className="text-zinc-300">{t('auth.email')}</Label>
               <Input
                 defaultValue={user?.email || ""}
                 disabled
@@ -90,7 +92,7 @@ export default function SettingsPage() {
             </div>
           </div>
           <Button className="bg-emerald-500 hover:bg-emerald-600 text-white">
-            Guardar cambios
+            {t('common.saveChanges')}
           </Button>
         </CardContent>
       </Card>
@@ -100,15 +102,15 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <Bell className="h-4 w-4 text-emerald-400" />
-            Notificaciones
+            {t('settings.notifications')}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
             {[
-              { label: "Alertas de stock bajo", desc: "Recibe avisos cuando un producto esté bajo el mínimo", defaultChecked: true },
-              { label: "Nuevas facturas", desc: "Notificaciones al recibir nuevas facturas de proveedores", defaultChecked: true },
-              { label: "Transferencias completadas", desc: "Avisos cuando se complete una transferencia", defaultChecked: false },
+              { label: t('settings.notifLowStock'), desc: t('settings.notifLowStockDesc'), defaultChecked: true },
+              { label: t('settings.notifNewInvoice'), desc: t('settings.notifNewInvoiceDesc'), defaultChecked: true },
+              { label: t('settings.notifTransfer'), desc: t('settings.notifTransferDesc'), defaultChecked: false },
             ].map((item) => (
               <div key={item.label} className="flex items-center justify-between py-2 border-b border-zinc-800 last:border-0">
                 <div>
@@ -130,26 +132,26 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <Shield className="h-4 w-4 text-emerald-400" />
-            Seguridad
+            {t('settings.security')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label className="text-zinc-300">Contraseña actual</Label>
+            <Label className="text-zinc-300">{t('settings.currentPassword')}</Label>
             <Input type="password" placeholder="••••••••" className="bg-zinc-800/50 border-zinc-700 text-white placeholder:text-zinc-500" />
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label className="text-zinc-300">Nueva contraseña</Label>
+              <Label className="text-zinc-300">{t('settings.newPassword')}</Label>
               <Input type="password" placeholder="••••••••" className="bg-zinc-800/50 border-zinc-700 text-white placeholder:text-zinc-500" />
             </div>
             <div className="space-y-2">
-              <Label className="text-zinc-300">Confirmar contraseña</Label>
+              <Label className="text-zinc-300">{t('settings.confirmPassword')}</Label>
               <Input type="password" placeholder="••••••••" className="bg-zinc-800/50 border-zinc-700 text-white placeholder:text-zinc-500" />
             </div>
           </div>
           <Button variant="outline" className="border-zinc-700 text-zinc-300 hover:text-white hover:bg-zinc-800">
-            Cambiar contraseña
+            {t('settings.changePassword')}
           </Button>
         </CardContent>
       </Card>
@@ -159,13 +161,13 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle className="text-base flex items-center gap-2">
             <Building2 className="h-4 w-4 text-emerald-400" />
-            Negocio / Comprobantes
+            {t('settings.business')}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label className="text-zinc-300">URL del logo</Label>
+              <Label className="text-zinc-300">{t('settings.logoUrl')}</Label>
               <Input
                 value={profile.logoUrl ?? ''}
                 onChange={e => setProfile(p => ({ ...p, logoUrl: e.target.value }))}
@@ -174,7 +176,7 @@ export default function SettingsPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-zinc-300">Dirección</Label>
+              <Label className="text-zinc-300">{t('settings.address')}</Label>
               <Input
                 value={profile.address ?? ''}
                 onChange={e => setProfile(p => ({ ...p, address: e.target.value }))}
@@ -182,7 +184,7 @@ export default function SettingsPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-zinc-300">Teléfono</Label>
+              <Label className="text-zinc-300">{t('settings.phone')}</Label>
               <Input
                 value={profile.phone ?? ''}
                 onChange={e => setProfile(p => ({ ...p, phone: e.target.value }))}
@@ -190,7 +192,7 @@ export default function SettingsPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-zinc-300">RIF / NIF</Label>
+              <Label className="text-zinc-300">{t('settings.taxId')}</Label>
               <Input
                 value={profile.taxId ?? ''}
                 onChange={e => setProfile(p => ({ ...p, taxId: e.target.value }))}
@@ -198,7 +200,7 @@ export default function SettingsPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-zinc-300">Prefijo comprobante</Label>
+              <Label className="text-zinc-300">{t('settings.docPrefixLabel')}</Label>
               <Input
                 value={profile.docPrefix}
                 onChange={e => setProfile(p => ({ ...p, docPrefix: e.target.value }))}
@@ -207,7 +209,7 @@ export default function SettingsPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-zinc-300">Etiqueta impuesto</Label>
+              <Label className="text-zinc-300">{t('settings.taxLabelField')}</Label>
               <Input
                 value={profile.taxLabel}
                 onChange={e => setProfile(p => ({ ...p, taxLabel: e.target.value }))}
@@ -216,7 +218,7 @@ export default function SettingsPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label className="text-zinc-300">Tasa impuesto (%)</Label>
+              <Label className="text-zinc-300">{t('settings.taxRateField')}</Label>
               <Input
                 type="number"
                 min={0}
@@ -228,8 +230,8 @@ export default function SettingsPage() {
           </div>
           <div className="flex items-center gap-3 py-2 border-b border-zinc-800">
             <div>
-              <p className="text-sm font-medium text-white">Impuesto habilitado</p>
-              <p className="text-xs text-zinc-400">Aplica tasa al emitir comprobantes</p>
+              <p className="text-sm font-medium text-white">{t('settings.taxEnabledLabel')}</p>
+              <p className="text-xs text-zinc-400">{t('settings.taxEnabledDesc')}</p>
             </div>
             <label className="relative inline-flex items-center cursor-pointer ml-auto">
               <input
@@ -242,7 +244,7 @@ export default function SettingsPage() {
             </label>
           </div>
           <Button onClick={saveProfile} className="bg-emerald-500 hover:bg-emerald-600 text-white">
-            Guardar configuración
+            {t('settings.saveConfig')}
           </Button>
         </CardContent>
       </Card>

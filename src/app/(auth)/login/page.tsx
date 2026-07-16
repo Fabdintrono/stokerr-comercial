@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { useI18n } from "@/lib/i18n";
 
 function getHomeUrl(role: string): string {
   if (role === "SUPER_ADMIN")       return "/super-admin/clients";
@@ -19,6 +20,7 @@ function getHomeUrl(role: string): string {
 export default function LoginPage() {
   const router = useRouter();
   const { login } = useAuth();
+  const { t } = useI18n();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -34,7 +36,7 @@ export default function LoginPage() {
       const result = await login(email, password);
 
       if (!result.success) {
-        setError(result.error || "Credenciales inválidas");
+        setError(result.error || t('auth.loginError'));
         setLoading(false);
         return;
       }
@@ -47,7 +49,7 @@ export default function LoginPage() {
         router.push(getHomeUrl(session.user.role));
       }
     } catch {
-      setError("Error al iniciar sesión");
+      setError(t('auth.loginErrorGeneral'));
       setLoading(false);
     }
   };
@@ -55,9 +57,9 @@ export default function LoginPage() {
   return (
     <Card className="w-full max-w-md bg-zinc-900/50 border-zinc-800 backdrop-blur-xl">
       <CardHeader className="space-y-1 text-center">
-        <CardTitle className="text-2xl font-bold text-white">Iniciar Sesión</CardTitle>
+        <CardTitle className="text-2xl font-bold text-white">{t('auth.login')}</CardTitle>
         <CardDescription className="text-zinc-400">
-          Ingresa tus credenciales para continuar
+          {t('auth.loginSubtitle')}
         </CardDescription>
       </CardHeader>
 
@@ -70,7 +72,7 @@ export default function LoginPage() {
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="email" className="text-zinc-300">Email</Label>
+            <Label htmlFor="email" className="text-zinc-300">{t('auth.email')}</Label>
             <Input
               id="email"
               type="email"
@@ -83,7 +85,7 @@ export default function LoginPage() {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password" className="text-zinc-300">Contraseña</Label>
+            <Label htmlFor="password" className="text-zinc-300">{t('auth.password')}</Label>
             <Input
               id="password"
               type="password"
@@ -102,13 +104,13 @@ export default function LoginPage() {
             className="w-full bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/25"
             disabled={loading}
           >
-            {loading ? "Ingresando..." : "Ingresar"}
+            {loading ? t('auth.loginLoading') : t('auth.loginButton')}
           </Button>
 
           <p className="text-sm text-zinc-500 text-center">
-            ¿No tienes cuenta?{" "}
+            {t('auth.noAccount')}{" "}
             <a href="/register" className="text-emerald-400 hover:text-emerald-300">
-              Regístrate
+              {t('auth.register')}
             </a>
           </p>
         </CardFooter>
