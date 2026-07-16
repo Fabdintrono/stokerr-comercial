@@ -11,6 +11,7 @@ const createOrderSchema = z.object({
   userId: z.string(),
   notes: z.string().optional(),
   currency: z.enum(['USD', 'VES', 'BRL']).optional(),
+  customerId: z.string().optional(),
   items: z.array(z.object({
     productId: z.string(),
     quantity: z.number().min(0.01),
@@ -142,6 +143,7 @@ export async function POST(request: NextRequest) {
         totalAmount,
         currency: orderCurrency as any,
         rateToBase,
+        customerId: validated.customerId,
         items: {
           create: validated.items.map((item) => ({
             productId: item.productId,
