@@ -2,6 +2,7 @@
 const nextConfig = {
   output: 'standalone',
   reactStrictMode: true,
+  serverExternalPackages: ['@react-pdf/renderer'],
   turbopack: {
     root: __dirname,
   },
