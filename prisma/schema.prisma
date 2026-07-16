@@ -152,6 +152,7 @@ model Business {
   exchangeRates        ExchangeRate[]
   tenantModules        TenantModule[]
   customers            Customer[]
+  subscription         Subscription?
 
   @@map("businesses")
 }
@@ -220,6 +221,52 @@ model Customer {
   orders Order[]
   @@index([businessId])
   @@map("customers")
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  GRACE
+  EXPIRED
+}
+
+model PlanPrice {
+  id           String   @id @default(cuid())
+  plan         Plan     @unique
+  monthlyPrice Decimal  @default(0) @db.Decimal(18, 2)
+  currency     Currency @default(USD)
+  updatedAt    DateTime @updatedAt
+  @@map("plan_prices")
+}
+
+model Subscription {
+  id               String             @id @default(cuid())
+  businessId       String             @unique
+  business         Business           @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  status           SubscriptionStatus @default(EXPIRED)
+  currentPeriodEnd DateTime?
+  graceDays        Int                @default(5)
+  lastPaymentAt    DateTime?
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+
+  payments BillingPayment[]
+  @@map("subscriptions")
+}
+
+model BillingPayment {
+  id                String       @id @default(cuid())
+  subscriptionId    String
+  subscription      Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+  amount            Decimal      @db.Decimal(18, 2)
+  currency          String       @default("usd")
+  payCurrency       String?
+  provider          String       @default("nowpayments")
+  providerPaymentId String       @unique
+  status            String
+  appliedAt         DateTime?
+  paidAt            DateTime?
+  createdAt         DateTime     @default(now())
+  @@map("billing_payments")
 }
 
 model UserBusiness {
