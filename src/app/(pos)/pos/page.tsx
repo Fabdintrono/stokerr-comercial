@@ -7,7 +7,7 @@ import toast from "react-hot-toast";
 import {
   ChefHat, LogOut, Search, Plus, Minus, X, Trash2,
   Scissors, CreditCard, Percent, Printer, RefreshCw, Loader2, Check,
-  Landmark, UtensilsCrossed, ChevronDown, FileText, History,
+  Landmark, UtensilsCrossed, ChevronDown, FileText, History, Receipt,
 } from "lucide-react";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -1097,6 +1097,12 @@ export default function StokerPOS() {
                     className="flex-1 py-3 rounded-xl bg-zinc-700 border border-zinc-600 text-sm text-white font-semibold flex items-center justify-center gap-2 hover:bg-zinc-600 transition-all"
                   >
                     <Printer className="h-4 w-4" /> Reimprimir
+                  </button>
+                  <button
+                    onClick={() => window.open(`/api/sales/${historyDetail.id}/pdf`, '_blank')}
+                    className="flex-1 py-3 rounded-xl bg-emerald-800/50 border border-emerald-700 text-sm text-emerald-300 font-semibold flex items-center justify-center gap-2 hover:bg-emerald-700/50 transition-all"
+                  >
+                    <Receipt className="h-4 w-4" /> Comprobante
                   </button>
                 </div>
               </>
