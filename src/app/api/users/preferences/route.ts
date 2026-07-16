@@ -3,9 +3,10 @@ import { getServerSession } from 'next-auth';
 import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
 import { z } from 'zod';
+import { normalizeLocale } from '@/lib/i18n/normalizeLocale';
 
 const updatePreferencesSchema = z.object({
-  language: z.enum(['pt-PT', 'es-ES', 'en-GB']).optional(),
+  language: z.string().optional(),
 });
 
 // PATCH /api/users/preferences - Actualizar preferencias del usuario
@@ -23,17 +24,14 @@ export async function PATCH(request: NextRequest) {
     const body = await request.json();
     const data = updatePreferencesSchema.parse(body);
 
+    const language = data.language ? normalizeLocale(data.language) : undefined;
+
     const user = await prisma.user.update({
       where: { id: session.user.id },
       data: {
-        ...(data.language && { language: data.language }),
+        ...(language && { language }),
       },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        language: true,
-      },
+      select: { id: true, name: true, email: true, language: true },
     });
 
     return NextResponse.json({ user });

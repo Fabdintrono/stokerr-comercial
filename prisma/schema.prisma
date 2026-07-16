@@ -85,7 +85,7 @@ model User {
   password  String
   phone     String?
   avatar    String?
-  language  String   @default("pt-PT")
+  language  String   @default("es")
   active    Boolean  @default(true)
   role      Role     @default(USER)
   createdAt DateTime @default(now())
