@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, CreditCard, Building2, CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { Search, CreditCard, Building2, CheckCircle, XCircle, Loader2, Pencil, Save } from "lucide-react";
 import toast from "react-hot-toast";
 
 interface Client {
@@ -21,22 +21,28 @@ interface Client {
   createdAt: string;
 }
 
+interface PlanPrice {
+  id: string;
+  plan: string;
+  monthlyPrice: string;
+  currency: string;
+}
+
 const planColors: Record<string, string> = {
   STARTER: "bg-zinc-700 text-zinc-300",
   GROWTH: "bg-blue-500/20 text-blue-400 border border-blue-500/30",
   ENTERPRISE: "bg-purple-500/20 text-purple-400 border border-purple-500/30",
 };
 
-const planPrices: Record<string, number> = {
-  STARTER: 19.90,
-  GROWTH: 49.90,
-  ENTERPRISE: 199.00,
-};
-
 export default function SubscriptionsPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
+  const [planPrices, setPlanPrices] = useState<Record<string, number>>({});
+  const [planPricesRaw, setPlanPricesRaw] = useState<PlanPrice[]>([]);
+  const [editingPlan, setEditingPlan] = useState<string | null>(null);
+  const [editValue, setEditValue] = useState<string>("");
+  const [savingPlan, setSavingPlan] = useState<string | null>(null);
 
   const fetchClients = useCallback(async () => {
     try {
@@ -51,7 +57,45 @@ export default function SubscriptionsPage() {
     }
   }, []);
 
-  useEffect(() => { fetchClients(); }, [fetchClients]);
+  const fetchPlanPrices = useCallback(async () => {
+    try {
+      const res = await fetch("/api/admin/plan-prices");
+      if (!res.ok) return;
+      const data: PlanPrice[] = await res.json();
+      setPlanPricesRaw(data);
+      const map: Record<string, number> = {};
+      for (const p of data) map[p.plan] = Number(p.monthlyPrice);
+      setPlanPrices(map);
+    } catch {
+      // non-critical — fallback to empty
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchClients();
+    fetchPlanPrices();
+  }, [fetchClients, fetchPlanPrices]);
+
+  async function savePlanPrice(plan: string) {
+    const price = Number(editValue);
+    if (isNaN(price) || price < 0) { toast.error("Precio inválido"); return; }
+    setSavingPlan(plan);
+    try {
+      const res = await fetch("/api/admin/plan-prices", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ plan, monthlyPrice: price }),
+      });
+      if (!res.ok) throw new Error();
+      toast.success("Precio actualizado");
+      setPlanPrices(prev => ({ ...prev, [plan]: price }));
+      setEditingPlan(null);
+    } catch {
+      toast.error("Error al guardar precio");
+    } finally {
+      setSavingPlan(null);
+    }
+  }
 
   const filteredClients = clients.filter((c) =>
     c.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -60,6 +104,8 @@ export default function SubscriptionsPage() {
 
   const activeClients = clients.filter((c) => c.active);
   const monthlyRevenue = activeClients.reduce((sum, c) => sum + (planPrices[c.plan] || 0), 0);
+
+  const plans = ["STARTER", "GROWTH", "ENTERPRISE"];
 
   return (
     <div className="space-y-4 p-4 lg:p-6">
@@ -92,11 +138,54 @@ export default function SubscriptionsPage() {
         </Card>
         <Card className="bg-zinc-900/50 border-zinc-800">
           <CardContent className="pt-4 pb-4">
-            <div className="text-xl lg:text-2xl font-bold text-amber-400">{monthlyRevenue.toFixed(2)}EUR</div>
+            <div className="text-xl lg:text-2xl font-bold text-amber-400">{monthlyRevenue.toFixed(2)} USD</div>
             <p className="text-xs text-zinc-500 mt-1">Ingresos Mensuales</p>
           </CardContent>
         </Card>
       </div>
+
+      {/* Plan Prices Editor */}
+      <Card className="bg-zinc-900/50 border-zinc-800">
+        <CardContent className="pt-4 pb-4">
+          <h2 className="text-sm font-semibold text-zinc-300 mb-3">Precios de Plan (USD/mes)</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {plans.map((plan) => (
+              <div key={plan} className="flex items-center gap-2">
+                <span className={`text-xs px-2 py-0.5 rounded-full ${planColors[plan]}`}>{plan}</span>
+                {editingPlan === plan ? (
+                  <>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={editValue}
+                      onChange={(e) => setEditValue(e.target.value)}
+                      className="w-24 px-2 py-1 text-sm bg-zinc-800 border border-zinc-700 rounded text-white focus:border-emerald-500 focus:outline-none"
+                    />
+                    <button
+                      onClick={() => savePlanPrice(plan)}
+                      disabled={savingPlan === plan}
+                      className="p-1 text-emerald-400 hover:text-emerald-300 disabled:opacity-50"
+                    >
+                      {savingPlan === plan ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-sm text-white">${(planPrices[plan] ?? 0).toFixed(2)}</span>
+                    <button
+                      onClick={() => { setEditingPlan(plan); setEditValue(String(planPrices[plan] ?? 0)); }}
+                      className="p-1 text-zinc-500 hover:text-zinc-300"
+                    >
+                      <Pencil className="h-3.5 w-3.5" />
+                    </button>
+                  </>
+                )}
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Search */}
       <div className="relative">
@@ -133,7 +222,7 @@ export default function SubscriptionsPage() {
                         </span>
                       </div>
                       <p className="text-sm text-zinc-400 mt-0.5">
-                        {planPrices[client.plan]?.toFixed(2) || "0.00"}EUR/mes
+                        ${(planPrices[client.plan] ?? 0).toFixed(2)} USD/mes
                       </p>
                       <div className="flex items-center gap-3 mt-1.5 text-xs text-zinc-500 flex-wrap">
                         <span className="flex items-center gap-1">
