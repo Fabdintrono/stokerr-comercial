@@ -752,6 +752,22 @@ async function main() {
   }
   console.log('✅ Catálogo de módulos creado');
 
+  // Precios de plan + suscripciones (Bloque C)
+  console.log('💳 Creando precios de plan...');
+  const planPrices = [
+    { plan: 'STARTER' as const, monthlyPrice: 19.9 },
+    { plan: 'GROWTH' as const, monthlyPrice: 49.9 },
+    { plan: 'ENTERPRISE' as const, monthlyPrice: 199 },
+  ];
+  for (const p of planPrices) {
+    await prisma.planPrice.upsert({ where: { plan: p.plan }, update: {}, create: { plan: p.plan, monthlyPrice: p.monthlyPrice } });
+  }
+  const allBiz = await prisma.business.findMany({ select: { id: true } });
+  for (const b of allBiz) {
+    await prisma.subscription.upsert({ where: { businessId: b.id }, update: {}, create: { businessId: b.id, status: 'EXPIRED' } });
+  }
+  console.log('✅ Precios de plan + suscripciones creados');
+
   console.log('🎉 Seed completado con éxito!');
   console.log('\n📋 Credenciales de prueba:');
   console.log('   Admin: admin@stocker.pt / admin123');
