@@ -117,7 +117,19 @@
     "subtotal": "Subtotal",
     "tax": "Tax",
     "total": "Total",
-    "voucher": "RECEIPT"
+    "voucher": "RECEIPT",
+    "customerOptional": "Customer (optional)",
+    "addProduct": "Add product",
+    "emitVoucher": "Issue receipt",
+    "voucherEmitted": "Receipt issued",
+    "emitError": "Error issuing receipt",
+    "chooseLocationAndItems": "Choose a location and add items",
+    "add": "Add",
+    "namePlaceholder": "Name *",
+    "nameRequired": "Name is required",
+    "customerCreated": "Customer created",
+    "noCustomers": "No customers.",
+    "totalLabel": "Total: {amount}"
   },
   "settings": {
     "branding": "Branding",

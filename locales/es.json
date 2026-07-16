@@ -117,7 +117,19 @@
     "subtotal": "Subtotal",
     "tax": "Impuesto",
     "total": "Total",
-    "voucher": "COMPROBANTE"
+    "voucher": "COMPROBANTE",
+    "customerOptional": "Cliente (opcional)",
+    "addProduct": "Agregar producto",
+    "emitVoucher": "Emitir comprobante",
+    "voucherEmitted": "Comprobante emitido",
+    "emitError": "Error al emitir",
+    "chooseLocationAndItems": "Elige local y agrega ítems",
+    "add": "Agregar",
+    "namePlaceholder": "Nombre *",
+    "nameRequired": "Nombre requerido",
+    "customerCreated": "Cliente creado",
+    "noCustomers": "Sin clientes.",
+    "totalLabel": "Total: {amount}"
   },
   "settings": {
     "branding": "Marca",

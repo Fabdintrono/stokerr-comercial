@@ -2,11 +2,13 @@
 import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useAuth } from '@/components/providers/AuthProvider'
+import { useI18n } from '@/lib/i18n'
 
 interface Line { productId: string; description: string; quantity: number; unitPrice: number }
 
 export default function NewInvoicePage() {
   const { user } = useAuth()
+  const { t } = useI18n()
   const [customers, setCustomers] = useState<any[]>([])
   const [locations, setLocations] = useState<any[]>([])
   const [products, setProducts] = useState<any[]>([])
@@ -27,7 +29,7 @@ export default function NewInvoicePage() {
   }
 
   async function emit() {
-    if (!locationId || lines.length === 0) return toast.error('Elige local y agrega ítems')
+    if (!locationId || lines.length === 0) return toast.error(t('invoicing.chooseLocationAndItems'))
     const res = await fetch('/api/orders', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -35,18 +37,18 @@ export default function NewInvoicePage() {
         items: lines.map(l => ({ productId: l.productId, quantity: l.quantity, unitPrice: l.unitPrice })),
       }),
     })
-    if (!res.ok) return toast.error('Error al emitir')
+    if (!res.ok) return toast.error(t('invoicing.emitError'))
     const order = await res.json()
     window.open(`/api/sales/${order.id}/pdf`, '_blank')
-    toast.success('Comprobante emitido'); setLines([])
+    toast.success(t('invoicing.voucherEmitted')); setLines([])
   }
 
   return (
     <div className="p-6 max-w-4xl space-y-5">
-      <h1 className="text-2xl font-semibold text-foreground">Nueva factura</h1>
+      <h1 className="text-2xl font-semibold text-foreground">{t('invoicing.newInvoice')}</h1>
       <div className="flex gap-3">
         <select value={customerId} onChange={e => setCustomerId(e.target.value)} className="flex-1 rounded-md bg-card border border-border p-2">
-          <option value="">Cliente (opcional)</option>
+          <option value="">{t('invoicing.customerOptional')}</option>
           {customers.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
         </select>
         <select value={locationId} onChange={e => setLocationId(e.target.value)} className="flex-1 rounded-md bg-card border border-border p-2">
@@ -54,7 +56,7 @@ export default function NewInvoicePage() {
         </select>
       </div>
       <div className="rounded-lg border border-border bg-card p-3">
-        <div className="text-sm text-muted-foreground mb-2">Agregar producto</div>
+        <div className="text-sm text-muted-foreground mb-2">{t('invoicing.addProduct')}</div>
         <div className="flex flex-wrap gap-2">
           {products.slice(0, 30).map(p => (
             <button key={p.id} onClick={() => addLine(p)} className="rounded-md border border-border px-3 py-1 text-sm text-foreground">{p.name}</button>
@@ -72,8 +74,8 @@ export default function NewInvoicePage() {
         ))}
       </div>
       <div className="flex justify-between items-center">
-        <span className="text-lg font-semibold text-foreground">Total: {total.toFixed(2)}</span>
-        <button onClick={emit} className="rounded-md bg-primary px-6 py-2 text-primary-foreground font-medium">Emitir comprobante</button>
+        <span className="text-lg font-semibold text-foreground">{t('invoicing.totalLabel', { amount: total.toFixed(2) })}</span>
+        <button onClick={emit} className="rounded-md bg-primary px-6 py-2 text-primary-foreground font-medium">{t('invoicing.emitVoucher')}</button>
       </div>
     </div>
   )
