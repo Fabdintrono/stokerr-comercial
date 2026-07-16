@@ -1,0 +1,83 @@
+{
+  "common": {
+    "appName": "Stocker",
+    "loading": "Loading…",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "close": "Close",
+    "back": "Back",
+    "confirm": "Confirm",
+    "search": "Search",
+    "filter": "Filter",
+    "actions": "Actions",
+    "status": "Status",
+    "date": "Date",
+    "name": "Name",
+    "description": "Description"
+  },
+  "auth": {
+    "login": "Log in",
+    "logout": "Log out",
+    "email": "Email",
+    "password": "Password",
+    "loginTitle": "Log in to your account",
+    "loginError": "Invalid credentials",
+    "language": "Language"
+  },
+  "billing": {
+    "title": "My subscription",
+    "plan": "Plan",
+    "amount": "Monthly amount",
+    "nextPayment": "Next payment",
+    "payUsdt": "Pay with USDT",
+    "statusActive": "Active",
+    "statusGrace": "In grace period",
+    "statusExpired": "Expired",
+    "graceBanner": "Your subscription is in its grace period. Renew before {date}.",
+    "expiredBanner": "Your subscription has expired. Renew to keep using Stocker."
+  },
+  "currency": {
+    "title": "Currencies",
+    "base": "Base currency",
+    "secondary": "Secondary currency",
+    "none": "None",
+    "saved": "Currencies updated"
+  },
+  "rates": {
+    "title": "Exchange rates",
+    "manual": "Manual",
+    "source": "Source",
+    "value": "Value",
+    "updated": "Rate updated"
+  },
+  "modules": {
+    "notActive": "Module not active",
+    "notActiveDesc": "This module is not included in your plan. Contact us to enable it.",
+    "catalog": "Module catalog",
+    "addon": "Add-on"
+  },
+  "invoicing": {
+    "newInvoice": "New invoice",
+    "customer": "Customer",
+    "customers": "Customers",
+    "document": "Receipt",
+    "quantity": "Qty",
+    "unitPrice": "Price",
+    "subtotal": "Subtotal",
+    "tax": "Tax",
+    "total": "Total",
+    "voucher": "RECEIPT"
+  },
+  "settings": {
+    "branding": "Branding",
+    "logo": "Logo",
+    "taxEnabled": "Charge tax",
+    "taxLabel": "Tax label",
+    "taxRate": "Tax rate (%)",
+    "docPrefix": "Receipt prefix",
+    "saved": "Settings saved"
+  }
+}

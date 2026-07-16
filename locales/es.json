@@ -1,12 +1,15 @@
 {
   "common": {
     "appName": "Stocker",
-    "loading": "Cargando...",
+    "loading": "Cargando…",
     "save": "Guardar",
     "cancel": "Cancelar",
     "delete": "Eliminar",
     "edit": "Editar",
     "create": "Crear",
+    "close": "Cerrar",
+    "back": "Volver",
+    "confirm": "Confirmar",
     "search": "Buscar",
     "filter": "Filtrar",
     "actions": "Acciones",
@@ -16,47 +19,65 @@
     "description": "Descripción"
   },
   "auth": {
-    "login": "Iniciar Sesión",
-    "logout": "Cerrar Sesión",
-    "register": "Registrarse",
-    "email": "Correo Electrónico",
+    "login": "Iniciar sesión",
+    "logout": "Cerrar sesión",
+    "email": "Correo electrónico",
     "password": "Contraseña",
-    "confirmPassword": "Confirmar Contraseña",
-    "forgotPassword": "¿Olvidaste tu contraseña?",
-    "noAccount": "¿No tienes cuenta?",
-    "hasAccount": "¿Ya tienes cuenta?",
     "loginTitle": "Inicia sesión en tu cuenta",
-    "registerTitle": "Crear nueva cuenta",
-    "loginSuccess": "Sesión iniciada correctamente",
     "loginError": "Credenciales inválidas",
-    "registerSuccess": "Cuenta creada correctamente",
-    "registerError": "Error al crear la cuenta",
-    "orContinueWith": "o continúa con"
+    "language": "Idioma"
   },
-  "nav": {
-    "dashboard": "Panel",
-    "inventory": "Inventario",
-    "products": "Productos",
-    "orders": "Pedidos",
-    "pos": "Punto de Venta",
-    "reports": "Reportes",
-    "settings": "Configuración",
-    "users": "Usuarios",
-    "restaurants": "Restaurantes"
+  "billing": {
+    "title": "Mi suscripción",
+    "plan": "Plan",
+    "amount": "Monto mensual",
+    "nextPayment": "Próximo pago",
+    "payUsdt": "Pagar en USDT",
+    "statusActive": "Activa",
+    "statusGrace": "En período de gracia",
+    "statusExpired": "Vencida",
+    "graceBanner": "Tu suscripción está en período de gracia. Renueva antes de {date}.",
+    "expiredBanner": "Tu suscripción venció. Renueva para seguir usando Stocker."
   },
-  "dashboard": {
-    "title": "Panel de Control",
-    "welcome": "Bienvenido",
-    "totalProducts": "Total Productos",
-    "lowStock": "Stock Bajo",
-    "pendingOrders": "Pedidos Pendientes",
-    "todaySales": "Ventas Hoy",
-    "recentActivity": "Actividad Reciente",
-    "quickActions": "Acciones Rápidas"
+  "currency": {
+    "title": "Monedas",
+    "base": "Moneda base",
+    "secondary": "Moneda secundaria",
+    "none": "Ninguna",
+    "saved": "Monedas actualizadas"
   },
-  "roles": {
-    "admin": "Administrador",
-    "manager": "Gerente",
-    "employee": "Empleado"
+  "rates": {
+    "title": "Tasas de cambio",
+    "manual": "Manual",
+    "source": "Fuente",
+    "value": "Valor",
+    "updated": "Tasa actualizada"
+  },
+  "modules": {
+    "notActive": "Módulo no activo",
+    "notActiveDesc": "Este módulo no está incluido en tu plan. Contáctanos para activarlo.",
+    "catalog": "Catálogo de módulos",
+    "addon": "Complemento"
+  },
+  "invoicing": {
+    "newInvoice": "Nueva factura",
+    "customer": "Cliente",
+    "customers": "Clientes",
+    "document": "Comprobante",
+    "quantity": "Cant.",
+    "unitPrice": "Precio",
+    "subtotal": "Subtotal",
+    "tax": "Impuesto",
+    "total": "Total",
+    "voucher": "COMPROBANTE"
+  },
+  "settings": {
+    "branding": "Marca",
+    "logo": "Logo",
+    "taxEnabled": "Cobrar impuesto",
+    "taxLabel": "Etiqueta del impuesto",
+    "taxRate": "Tasa del impuesto (%)",
+    "docPrefix": "Prefijo del comprobante",
+    "saved": "Ajustes guardados"
   }
 }
