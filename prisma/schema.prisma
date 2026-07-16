@@ -126,6 +126,17 @@ model Business {
   multiCurrency     Boolean    @default(false)
   rateSource        RateSource @default(MANUAL)
 
+  // Branding + comprobantes (Bloque B)
+  logoUrl        String?
+  address        String?
+  phone          String?
+  taxId          String?
+  docPrefix      String   @default("F-")
+  docNextNumber  Int      @default(1)
+  taxEnabled     Boolean  @default(false)
+  defaultTaxRate Decimal  @default(0) @db.Decimal(5, 2)
+  taxLabel       String   @default("IVA")
+
   // Relaciones
   locations            Location[]
   categories           Category[]
@@ -140,6 +151,7 @@ model Business {
   notifications        Notification[]
   exchangeRates        ExchangeRate[]
   tenantModules        TenantModule[]
+  customers            Customer[]
 
   @@map("businesses")
 }
@@ -190,6 +202,24 @@ model TenantModule {
   @@unique([businessId, moduleKey])
   @@index([businessId])
   @@map("tenant_modules")
+}
+
+model Customer {
+  id         String   @id @default(cuid())
+  businessId String
+  business   Business @relation(fields: [businessId], references: [id], onDelete: Cascade)
+  name       String
+  taxId      String?
+  address    String?
+  phone      String?
+  email      String?
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  orders Order[]
+  @@index([businessId])
+  @@map("customers")
 }
 
 model UserBusiness {
@@ -540,6 +570,10 @@ model Order {
   totalAmount Decimal  @default(0)
   currency    Currency @default(USD)
   rateToBase  Decimal  @default(1) @db.Decimal(18, 6)
+  customerId  String?
+  customer    Customer? @relation(fields: [customerId], references: [id])
+  docNumber   String?
+  issuedAt    DateTime?
   notes       String?
   locationId  String
   tableId     String?
