@@ -15,14 +15,9 @@ interface ProvidersProps {
 
 export function Providers({ children }: ProvidersProps) {
   return (
-    <ThemeProvider
-      attribute="class"
-      defaultTheme="dark"
-      enableSystem={false}
-      disableTransitionOnChange
-    >
-      <I18nProvider defaultLocale="pt">
-        <AuthProvider>
+    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem={false} disableTransitionOnChange>
+      <AuthProvider>
+        <I18nProvider>
           <BusinessProvider>
             <SubscriptionProvider>
               <ModulesProvider>
@@ -30,8 +25,8 @@ export function Providers({ children }: ProvidersProps) {
               </ModulesProvider>
             </SubscriptionProvider>
           </BusinessProvider>
-        </AuthProvider>
-      </I18nProvider>
+        </I18nProvider>
+      </AuthProvider>
     </ThemeProvider>
   );
 }
