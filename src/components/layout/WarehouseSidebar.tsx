@@ -12,14 +12,16 @@ import {
   ClipboardList, SlidersHorizontal, ShoppingCart, Pencil,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useModules } from "@/components/modules/ModulesProvider";
+import type { ModuleKey } from "@/lib/modules/registry";
 
 interface WarehouseSidebarProps {
   isOpen?: boolean;
   onClose?: () => void;
 }
 
-interface SubItem { key: string; label: string; href: string; icon: any }
-interface NavItem { key: string; icon: any; label: string; href: string; children?: SubItem[]; section?: string }
+interface SubItem { key: string; label: string; href: string; icon: any; module?: ModuleKey }
+interface NavItem { key: string; icon: any; label: string; href: string; children?: SubItem[]; section?: string; module?: ModuleKey }
 
 const navItems: NavItem[] = [
   // ── Operaciones ──────────────────────────────
@@ -61,6 +63,8 @@ export function WarehouseSidebar({ isOpen = false, onClose }: WarehouseSidebarPr
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
   const pathname = usePathname();
   const { user, logout } = useAuth();
+  const { has, loading: modLoading } = useModules();
+  const visibleItems = navItems.filter(i => !i.module || modLoading || has(i.module));
 
   const isActive = (key: string) =>
     pathname === `/warehouse/${key}` || pathname.startsWith(`/warehouse/${key}/`);
@@ -117,7 +121,7 @@ export function WarehouseSidebar({ isOpen = false, onClose }: WarehouseSidebarPr
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto px-2 py-3">
         <div className="space-y-0.5">
-          {navItems.map(item => {
+          {visibleItems.map(item => {
             const Icon = item.icon;
             const active = isActive(item.key);
             const parentActive = isParentOfActive(item);
