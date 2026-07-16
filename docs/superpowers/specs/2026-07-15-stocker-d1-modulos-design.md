@@ -16,9 +16,14 @@ adicional. D1 entrega la **maquinaria de gating + catálogo + gestión + metadat
 features de cada módulo (Finanzas, BI, CRM) se construyen después y nacen ya "gateables".
 
 ### Modelo de negocio (decidido)
-- **Planes** (`STARTER`/`GROWTH`/`ENTERPRISE`) incluyen un set base de módulos.
-- **Add-ons:** módulos extra activables sueltos sobre cualquier plan, por cliente.
+- **STARTER y GROWTH:** funciones básicas (núcleo). NO incluyen módulos premium por defecto.
+- **Add-ons (FINANCE / CRM / BI):** se activan aparte, por cliente, cada uno con su precio. Son
+  puros add-ons (por defecto `includedInPlans = []`).
+- **ENTERPRISE:** plan **a medida** — el cliente se pone en contacto y el admin le activa/adapta el
+  sistema según necesidad (activación manual de los módulos que pacte, y enganche con **D2**
+  customización de código por cliente). No auto-incluye módulos; se configura por cliente al contratar.
 - **Módulos efectivos de un cliente** = (incluidos por su plan) ∪ (add-ons activados) − (overrides apagados).
+  Con la política actual, "incluidos por plan" arranca vacío para los tres; todo se activa por cliente.
 
 ### Catálogo inicial
 Núcleo base (inventario + ventas/POS + facturación no fiscal) siempre activo. Módulos opcionales
@@ -124,7 +129,8 @@ Añadir a `Business` la relación inversa: `tenantModules TenantModule[]`.
 
 ### Aplicación a DB
 `prisma db push` contra la Supabase comercial (ya conectada). Seed: crear las filas `Module` desde
-`MODULE_REGISTRY` con precios 0 e `includedInPlans` por defecto (editable luego por admin).
+`MODULE_REGISTRY` con precio 0 e `includedInPlans = []` (puros add-ons; el admin ajusta precio e
+inclusión luego). Clientes ENTERPRISE: activación manual por cliente vía toggles al contratar.
 
 ---
 
