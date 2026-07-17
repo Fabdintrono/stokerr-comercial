@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
 import { z } from 'zod';
+import { requireModule, ModuleForbiddenError } from '@/lib/modules/guard';
 
 // ── Unit conversion ──────────────────────────────────────────────────────────
 // Returns quantity expressed in the product's base unit.
@@ -56,6 +57,15 @@ export async function GET(request: NextRequest) {
 
     const businessId = request.headers.get('X-Business-Id') || request.cookies.get('businessId')?.value;
     if (!businessId) return NextResponse.json({ error: 'Sin negocio' }, { status: 400 });
+
+    if (businessId) {
+      try {
+        await requireModule(prisma, businessId, 'RESTAURANT');
+      } catch (e) {
+        if (e instanceof ModuleForbiddenError) return NextResponse.json({ error: 'module not enabled' }, { status: 403 });
+        throw e;
+      }
+    }
 
     const { searchParams } = new URL(request.url);
     const productId = searchParams.get('productId');
@@ -145,6 +155,15 @@ export async function POST(request: NextRequest) {
 
     const businessId = request.headers.get('X-Business-Id') || request.cookies.get('businessId')?.value;
     if (!businessId) return NextResponse.json({ error: 'Sin negocio' }, { status: 400 });
+
+    if (businessId) {
+      try {
+        await requireModule(prisma, businessId, 'RESTAURANT');
+      } catch (e) {
+        if (e instanceof ModuleForbiddenError) return NextResponse.json({ error: 'module not enabled' }, { status: 403 });
+        throw e;
+      }
+    }
 
     const body = await request.json();
     const data = createRecipeSchema.parse(body);

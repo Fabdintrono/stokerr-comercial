@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
 import { z } from 'zod';
+import { requireModule, ModuleForbiddenError } from '@/lib/modules/guard';
 
 const createSchema = z.object({
   toLocationId: z.string(),   // warehouse
@@ -24,6 +25,15 @@ export async function GET(request: NextRequest) {
     const businessId = request.headers.get('X-Business-Id') || request.cookies.get('businessId')?.value;
     if (!businessId) return NextResponse.json({ error: 'Sin negocio' }, { status: 400 });
 
+    if (businessId) {
+      try {
+        await requireModule(prisma, businessId, 'RESTAURANT');
+      } catch (e) {
+        if (e instanceof ModuleForbiddenError) return NextResponse.json({ error: 'module not enabled' }, { status: 403 });
+        throw e;
+      }
+    }
+
     const role = session.user.role as string;
     const { searchParams } = new URL(request.url);
     const locationId = searchParams.get('locationId');
@@ -44,7 +54,7 @@ export async function GET(request: NextRequest) {
         requestedBy:  { select: { id: true, name: true } },
         reviewedBy:   { select: { id: true, name: true } },
         items: {
-          include: { product: { select: { id: true, name: true, unit: true, sku: true } } },
+          include: { product: { select: { id: true, name: true, unit: true, sku: true, costPrice: true, vatRate: true } } },
         },
       },
       orderBy: { createdAt: 'desc' },
@@ -65,6 +75,15 @@ export async function POST(request: NextRequest) {
 
     const businessId = request.headers.get('X-Business-Id') || request.cookies.get('businessId')?.value;
     if (!businessId) return NextResponse.json({ error: 'Sin negocio' }, { status: 400 });
+
+    if (businessId) {
+      try {
+        await requireModule(prisma, businessId, 'RESTAURANT');
+      } catch (e) {
+        if (e instanceof ModuleForbiddenError) return NextResponse.json({ error: 'module not enabled' }, { status: 403 });
+        throw e;
+      }
+    }
 
     const body = await request.json();
     const data = createSchema.parse(body);

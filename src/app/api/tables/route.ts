@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { requireModule, ModuleForbiddenError } from '@/lib/modules/guard';
 
 const createTableSchema = z.object({
   number: z.string().min(1),
@@ -11,6 +12,16 @@ const createTableSchema = z.object({
 // GET /api/tables - List tables for a location
 export async function GET(request: NextRequest) {
   try {
+    const businessId = request.headers.get('X-Business-Id') || request.cookies.get('businessId')?.value;
+    if (businessId) {
+      try {
+        await requireModule(prisma, businessId, 'RESTAURANT');
+      } catch (e) {
+        if (e instanceof ModuleForbiddenError) return NextResponse.json({ error: 'module not enabled' }, { status: 403 });
+        throw e;
+      }
+    }
+
     const { searchParams } = new URL(request.url);
     const locationId = searchParams.get('locationId');
 
@@ -39,6 +50,16 @@ export async function GET(request: NextRequest) {
 // POST /api/tables - Create table
 export async function POST(request: NextRequest) {
   try {
+    const businessId = request.headers.get('X-Business-Id') || request.cookies.get('businessId')?.value;
+    if (businessId) {
+      try {
+        await requireModule(prisma, businessId, 'RESTAURANT');
+      } catch (e) {
+        if (e instanceof ModuleForbiddenError) return NextResponse.json({ error: 'module not enabled' }, { status: 403 });
+        throw e;
+      }
+    }
+
     const body = await request.json();
     const validated = createTableSchema.parse(body);
 
