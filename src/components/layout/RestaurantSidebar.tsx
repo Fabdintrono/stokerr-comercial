@@ -32,6 +32,7 @@ import {
   Pencil,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useModules } from "@/components/modules/ModulesProvider";
 
 interface SubItem {
   key: string;
@@ -118,7 +119,10 @@ export function RestaurantSidebar() {
   const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
   const pathname = usePathname();
   const { user, logout, isLoading } = useAuth();
+  const { has, loading: modLoading } = useModules();
   const userRole = user?.role || "CASHIER";
+
+  if (!modLoading && !has('RESTAURANT')) return null;
 
   const visibleItems = isLoading
     ? navItems

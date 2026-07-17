@@ -30,7 +30,7 @@ const navItems: NavItem[] = [
     key: "inventory", icon: Receipt, label: "Inventario", href: "/warehouse/inventory",
     children: [
       { key: "products",      label: "Productos",   href: "/warehouse/products",                icon: Package },
-      { key: "replenishment", label: "Solicitudes", href: "/warehouse/replenishment",             icon: RefreshCcw },
+      { key: "replenishment", label: "Solicitudes", href: "/warehouse/replenishment",             icon: RefreshCcw, module: 'RESTAURANT' },
       { key: "inv-adjustments",label: "Ajustes",   href: "/warehouse/inventory/adjustments",     icon: Pencil },
     ],
   },
@@ -162,7 +162,7 @@ export function WarehouseSidebar({ isOpen = false, onClose }: WarehouseSidebarPr
                       >
                         Lista
                       </Link>
-                      {item.children.map(child => {
+                      {item.children.filter(c => !c.module || modLoading || has(c.module)).map(child => {
                         const ChildIcon = child.icon;
                         const childActive = pathname === child.href || pathname.startsWith(child.href + "/");
                         return (
