@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { RestaurantSidebar } from "@/components/layout/RestaurantSidebar";
 import { RestaurantHeader } from "@/components/layout/RestaurantHeader";
 import { Toaster } from "react-hot-toast";
+import { ModuleGate } from "@/components/modules/ModuleGate";
 
 interface RestaurantLayoutProps {
   children: ReactNode;
@@ -61,7 +62,9 @@ export default function RestaurantLayout({ children }: RestaurantLayoutProps) {
         <div className="flex flex-1 flex-col overflow-hidden min-w-0">
           <RestaurantHeader />
           <main className="flex-1 overflow-y-auto">
-            {businessReady ? children : (
+            {businessReady ? (
+              <ModuleGate module="RESTAURANT">{children}</ModuleGate>
+            ) : (
               <div className="flex items-center justify-center h-full">
                 <div className="flex flex-col items-center gap-3">
                   <div className="h-8 w-8 rounded-full border-2 border-orange-500 border-t-transparent animate-spin" />

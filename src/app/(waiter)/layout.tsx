@@ -2,6 +2,7 @@
 
 import { useState, useEffect, ReactNode } from "react";
 import { Toaster } from "react-hot-toast";
+import { ModuleGate } from "@/components/modules/ModuleGate";
 
 export default function WaiterLayout({ children }: { children: ReactNode }) {
   const [ready, setReady] = useState(false);
@@ -45,7 +46,9 @@ export default function WaiterLayout({ children }: { children: ReactNode }) {
 
   return (
     <>
-      <div className="h-screen overflow-hidden bg-zinc-950">{children}</div>
+      <div className="h-screen overflow-hidden bg-zinc-950">
+        <ModuleGate module="RESTAURANT">{children}</ModuleGate>
+      </div>
       <Toaster position="bottom-right" />
     </>
   );
