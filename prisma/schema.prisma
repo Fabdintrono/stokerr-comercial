@@ -33,6 +33,20 @@ enum Plan {
   ENTERPRISE
 }
 
+enum BusinessVertical {
+  RESTAURANT
+  FASTFOOD
+  WHOLESALE
+  HARDWARE
+  PHARMACY
+  RETAIL
+}
+
+enum ModuleStatus {
+  LIVE
+  COMING_SOON
+}
+
 enum Unit {
   KG
   G
@@ -113,8 +127,9 @@ model Business {
   id             String   @id @default(cuid())
   name           String
   slug           String   @unique
-  plan           Plan     @default(STARTER)
-  active         Boolean  @default(true)
+  plan           Plan             @default(STARTER)
+  vertical       BusinessVertical @default(RETAIL)
+  active         Boolean          @default(true)
   maxRestaurants Int      @default(5)
   maxUsers       Int      @default(10)
   createdAt      DateTime @default(now())
@@ -181,9 +196,10 @@ model Module {
   addOnPrice      Decimal  @default(0) @db.Decimal(18, 2)
   priceCurrency   Currency @default(USD)
   includedInPlans Plan[]   @default([])
-  active          Boolean  @default(true)
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  active          Boolean      @default(true)
+  status          ModuleStatus @default(LIVE)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
 
   tenantModules TenantModule[]
   @@map("modules")

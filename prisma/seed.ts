@@ -739,15 +739,19 @@ async function main() {
   // Módulos (catálogo) — sembrados desde el registro de código
   console.log('🧩 Creando catálogo de módulos...');
   const moduleSeed = [
-    { key: 'FINANCE', name: 'Finanzas', description: 'Contabilidad, gastos, flujo de caja' },
-    { key: 'BI', name: 'BI / Analytics', description: 'Dashboards y reportes avanzados' },
-    { key: 'CRM', name: 'CRM', description: 'Clientes, seguimiento, campañas' },
+    { key: 'FINANCE', name: 'Finanzas', description: 'Contabilidad, gastos, flujo de caja', status: 'LIVE' },
+    { key: 'BI', name: 'BI / Analytics', description: 'Dashboards y reportes avanzados', status: 'LIVE' },
+    { key: 'CRM', name: 'CRM', description: 'Clientes, seguimiento, campañas', status: 'LIVE' },
+    { key: 'RESTAURANT', name: 'Restaurante', description: 'Mesas, recetas, cocina, reposición', status: 'LIVE' },
+    { key: 'WHOLESALE', name: 'Mayorista', description: 'Listas de precios, crédito', status: 'COMING_SOON' },
+    { key: 'VARIANTS', name: 'Variantes', description: 'Talla/color/modelo/SKU', status: 'COMING_SOON' },
+    { key: 'BATCHES', name: 'Lotes y vencimiento', description: 'Lotes y vencimientos', status: 'COMING_SOON' },
   ];
   for (const m of moduleSeed) {
     await prisma.module.upsert({
       where: { key: m.key },
-      update: {},
-      create: { key: m.key, name: m.name, description: m.description, addOnPrice: 0, includedInPlans: [], active: true },
+      update: { name: m.name, description: m.description, status: m.status as any },
+      create: { key: m.key, name: m.name, description: m.description, addOnPrice: 0, includedInPlans: [], active: true, status: m.status as any },
     });
   }
   console.log('✅ Catálogo de módulos creado');
