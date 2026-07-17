@@ -13,13 +13,12 @@ const createTableSchema = z.object({
 export async function GET(request: NextRequest) {
   try {
     const businessId = request.headers.get('X-Business-Id') || request.cookies.get('businessId')?.value;
-    if (businessId) {
-      try {
-        await requireModule(prisma, businessId, 'RESTAURANT');
-      } catch (e) {
-        if (e instanceof ModuleForbiddenError) return NextResponse.json({ error: 'module not enabled' }, { status: 403 });
-        throw e;
-      }
+    if (!businessId) return NextResponse.json({ error: 'Sin negocio' }, { status: 400 });
+    try {
+      await requireModule(prisma, businessId, 'RESTAURANT');
+    } catch (e) {
+      if (e instanceof ModuleForbiddenError) return NextResponse.json({ error: 'module not enabled' }, { status: 403 });
+      throw e;
     }
 
     const { searchParams } = new URL(request.url);
@@ -51,13 +50,12 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const businessId = request.headers.get('X-Business-Id') || request.cookies.get('businessId')?.value;
-    if (businessId) {
-      try {
-        await requireModule(prisma, businessId, 'RESTAURANT');
-      } catch (e) {
-        if (e instanceof ModuleForbiddenError) return NextResponse.json({ error: 'module not enabled' }, { status: 403 });
-        throw e;
-      }
+    if (!businessId) return NextResponse.json({ error: 'Sin negocio' }, { status: 400 });
+    try {
+      await requireModule(prisma, businessId, 'RESTAURANT');
+    } catch (e) {
+      if (e instanceof ModuleForbiddenError) return NextResponse.json({ error: 'module not enabled' }, { status: 403 });
+      throw e;
     }
 
     const body = await request.json();
