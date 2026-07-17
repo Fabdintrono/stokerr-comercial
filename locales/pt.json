@@ -140,6 +140,16 @@
     "rate": "Taxa",
     "equiv": "Equiv."
   },
+  "vertical": {
+    "shellTitle": {
+      "RESTAURANT": "Restaurante",
+      "FASTFOOD": "Local",
+      "WHOLESALE": "Depósito",
+      "HARDWARE": "Comércio",
+      "PHARMACY": "Farmácia",
+      "RETAIL": "Comércio"
+    }
+  },
   "settings": {
     "branding": "Marca",
     "logo": "Logo",

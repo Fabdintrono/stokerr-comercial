@@ -140,6 +140,16 @@
     "rate": "Tasa",
     "equiv": "Equiv."
   },
+  "vertical": {
+    "shellTitle": {
+      "RESTAURANT": "Restaurante",
+      "FASTFOOD": "Local",
+      "WHOLESALE": "Depósito",
+      "HARDWARE": "Comercio",
+      "PHARMACY": "Farmacia",
+      "RETAIL": "Comercio"
+    }
+  },
   "settings": {
     "branding": "Marca",
     "logo": "Logo",

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/components/providers/AuthProvider";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,7 @@ import {
 import { User, Settings, LogOut, Menu } from "lucide-react";
 import Link from "next/link";
 import { NotificationBell } from "@/components/layout/NotificationBell";
+import { useI18n } from "@/lib/i18n";
 
 interface WarehouseHeaderProps {
   onMenuToggle?: () => void;
@@ -23,6 +24,23 @@ interface WarehouseHeaderProps {
 
 export function WarehouseHeader({ onMenuToggle }: WarehouseHeaderProps) {
   const { user, logout } = useAuth();
+  const { t } = useI18n();
+  const [warehouseLocationId, setWarehouseLocationId] = useState<string | null>(null);
+  const [vertical, setVertical] = useState<string | null>(null);
+
+  useEffect(() => {
+    fetch("/api/auth/business")
+      .then((r) => r.json())
+      .then((data) => {
+        const biz = data.businesses?.[0];
+        if (biz?.vertical) setVertical(biz.vertical);
+        const wh = (biz?.locations || []).find(
+          (l: any) => l.type === "WAREHOUSE" && l.isActive !== false
+        );
+        if (wh) setWarehouseLocationId(wh.id);
+      })
+      .catch(() => {});
+  }, []);
 
   const initials = user?.name
     ? user.name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
@@ -45,12 +63,13 @@ export function WarehouseHeader({ onMenuToggle }: WarehouseHeaderProps) {
           
           <h1 className="text-base md:text-lg font-semibold text-white truncate">
             Panel del Depósito
+            <span className="ml-2 text-sm font-medium text-zinc-300">{t(`vertical.shellTitle.${vertical ?? 'RETAIL'}`)}</span>
           </h1>
         </div>
 
         {/* Right side - Notifications + User */}
         <div className="flex items-center gap-1 md:gap-2">
-          <NotificationBell color="emerald" />
+          <NotificationBell locationId={warehouseLocationId} color="emerald" />
 
           {/* User menu */}
           <DropdownMenu>

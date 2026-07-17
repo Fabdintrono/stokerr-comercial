@@ -140,6 +140,16 @@
     "rate": "Rate",
     "equiv": "Equiv."
   },
+  "vertical": {
+    "shellTitle": {
+      "RESTAURANT": "Restaurant",
+      "FASTFOOD": "Store",
+      "WHOLESALE": "Warehouse",
+      "HARDWARE": "Store",
+      "PHARMACY": "Pharmacy",
+      "RETAIL": "Store"
+    }
+  },
   "settings": {
     "branding": "Branding",
     "logo": "Logo",

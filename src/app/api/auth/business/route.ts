@@ -41,6 +41,7 @@ export async function GET(request: NextRequest) {
       slug: ub.business.slug,
       plan: ub.business.plan,
       active: ub.business.active,
+      vertical: ub.business.vertical,
       role: ub.role,
       locations: ub.business.locations,
     }));
