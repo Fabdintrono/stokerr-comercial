@@ -22,6 +22,7 @@ interface ModuleConfig {
   addOnPrice: number;
   priceCurrency: "USD" | "VES" | "BRL";
   includedInPlans: Plan[];
+  status?: string;
 }
 
 export default function SuperAdminModulesPage() {
@@ -135,6 +136,9 @@ export default function SuperAdminModulesPage() {
                     <div className="min-w-0">
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="font-semibold text-white">{cfg.label}</span>
+                        {cfg.status === 'COMING_SOON' && (
+                          <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-amber-500/15 text-amber-400">{t('modules.comingSoon')}</span>
+                        )}
                         <code className="text-xs text-zinc-500 bg-zinc-800 px-1.5 py-0.5 rounded">
                           {cfg.key}
                         </code>

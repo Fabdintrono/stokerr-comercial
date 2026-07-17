@@ -111,7 +111,8 @@
     "includedInPlans": "Included in plans",
     "updated": "Module updated",
     "loadError": "Error loading modules",
-    "saveError": "Error saving module"
+    "saveError": "Error saving module",
+    "comingSoon": "Coming soon"
   },
   "invoicing": {
     "newInvoice": "New invoice",

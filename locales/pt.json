@@ -111,7 +111,8 @@
     "includedInPlans": "Incluído nos planos",
     "updated": "Módulo atualizado",
     "loadError": "Erro ao carregar módulos",
-    "saveError": "Erro ao salvar módulo"
+    "saveError": "Erro ao salvar módulo",
+    "comingSoon": "Em breve"
   },
   "invoicing": {
     "newInvoice": "Nova fatura",
