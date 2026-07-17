@@ -1,7 +1,9 @@
 FROM node:20-alpine AS deps
 WORKDIR /app
 COPY package.json package-lock.json ./
-RUN npm ci
+# --include=dev: Coolify inyecta NODE_ENV=production en el build, que si no haría
+# que npm ci omita devDependencies (typescript, tailwind, prisma CLI) y rompa next build
+RUN npm ci --include=dev
 
 FROM node:20-alpine AS builder
 WORKDIR /app
