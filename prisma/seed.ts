@@ -42,6 +42,7 @@ async function main() {
       active: true,
       maxRestaurants: 10,
       maxUsers: 20,
+      vertical: 'RESTAURANT',
     },
   });
   console.log('✅ Negocio creado:', business.name);
@@ -755,6 +756,14 @@ async function main() {
     });
   }
   console.log('✅ Catálogo de módulos creado');
+
+  // TenantModule: habilitar RESTAURANT para el negocio demo
+  await prisma.tenantModule.upsert({
+    where: { businessId_moduleKey: { businessId: business.id, moduleKey: 'RESTAURANT' } },
+    update: { enabled: true },
+    create: { businessId: business.id, moduleKey: 'RESTAURANT', enabled: true, source: 'PLAN', priceAtActivation: 0 },
+  });
+  console.log('✅ TenantModule RESTAURANT habilitado para el negocio demo');
 
   // Precios de plan + suscripciones (Bloque C)
   console.log('💳 Creando precios de plan...');
