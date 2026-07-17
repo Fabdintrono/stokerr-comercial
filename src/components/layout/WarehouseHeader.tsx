@@ -62,8 +62,7 @@ export function WarehouseHeader({ onMenuToggle }: WarehouseHeaderProps) {
           </Button>
           
           <h1 className="text-base md:text-lg font-semibold text-white truncate">
-            Panel del Depósito
-            <span className="ml-2 text-sm font-medium text-zinc-300">{t(`vertical.shellTitle.${vertical ?? 'RETAIL'}`)}</span>
+            {t(`vertical.shellTitle.${vertical ?? 'RETAIL'}`)}
           </h1>
         </div>
 
