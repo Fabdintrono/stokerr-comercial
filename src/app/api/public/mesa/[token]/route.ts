@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { requireModule, ModuleForbiddenError } from '@/lib/modules/guard';
 
 // GET /api/public/mesa/[token] — no auth, returns current open order for a table
 export async function GET(
@@ -15,12 +16,19 @@ export async function GET(
         id: true,
         number: true,
         isActive: true,
-        location: { select: { name: true, isActive: true } },
+        location: { select: { name: true, isActive: true, businessId: true } },
       },
     });
 
     if (!table || !table.isActive || !table.location.isActive) {
       return NextResponse.json({ error: 'Mesa no encontrada' }, { status: 404 });
+    }
+
+    try {
+      await requireModule(prisma, table.location.businessId, 'RESTAURANT');
+    } catch (e) {
+      if (e instanceof ModuleForbiddenError) return NextResponse.json({ error: 'not found' }, { status: 404 });
+      throw e;
     }
 
     const order = await prisma.order.findFirst({
