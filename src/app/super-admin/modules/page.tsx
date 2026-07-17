@@ -37,7 +37,7 @@ export default function SuperAdminModulesPage() {
       if (!res.ok) throw new Error();
       const data = await res.json();
       // data is an array or record — normalise to array
-      const raw: ModuleConfig[] = Array.isArray(data) ? data : Object.values(data);
+      const raw: ModuleConfig[] = Array.isArray(data) ? data : (data.modules ?? []);
       // Ensure every registry key is present
       const merged: ModuleConfig[] = MODULE_KEYS.map((k) => {
         const found = raw.find((r) => r.key === k);
