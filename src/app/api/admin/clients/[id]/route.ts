@@ -3,10 +3,13 @@ import { getServerSession } from 'next-auth';
 import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
 import { z } from 'zod';
+import { applyVerticalPreset } from '@/lib/modules/applyVerticalPreset';
+import { VERTICALS } from '@/lib/modules/verticals';
 
 const updateClientSchema = z.object({
   name: z.string().min(1).max(200).optional(),
   plan: z.enum(['STARTER', 'GROWTH', 'ENTERPRISE']).optional(),
+  vertical: z.enum(VERTICALS as [string, ...string[]]).optional(),
   maxRestaurants: z.number().int().min(1).optional(),
   maxUsers: z.number().int().min(1).optional(),
   active: z.boolean().optional(),
@@ -70,10 +73,17 @@ export async function PATCH(
     const body = await request.json();
     const data = updateClientSchema.parse(body);
 
+    const { vertical, ...rest } = data;
+
     const business = await prisma.business.update({
       where: { id },
-      data,
+      data: vertical ? { ...rest, vertical: vertical as any } : rest,
     });
+
+    // Apply preset when vertical changes (additive — only enables, never disables)
+    if (vertical) {
+      await applyVerticalPreset(prisma, id, vertical as any);
+    }
 
     return NextResponse.json({ client: business });
   } catch (error) {

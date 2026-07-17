@@ -4,11 +4,14 @@ import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
 import { z } from 'zod';
 import bcrypt from 'bcryptjs';
+import { applyVerticalPreset } from '@/lib/modules/applyVerticalPreset';
+import { VERTICALS } from '@/lib/modules/verticals';
 
 const createClientSchema = z.object({
   businessName: z.string().min(1).max(200).optional(),
   slug: z.string().min(1).max(100).regex(/^[a-z0-9-]+$/).optional(),
   plan: z.enum(['STARTER', 'GROWTH', 'ENTERPRISE']).optional(),
+  vertical: z.enum(VERTICALS as [string, ...string[]]).default('RETAIL'),
   maxRestaurants: z.number().int().min(1).default(5).optional(),
   maxUsers: z.number().int().min(1).default(10).optional(),
   // Owner user
@@ -119,6 +122,7 @@ export async function POST(request: NextRequest) {
             name: data.businessName!,
             slug: data.slug!,
             plan: data.plan ?? 'STARTER',
+            vertical: (data.vertical ?? 'RETAIL') as any,
             maxRestaurants: data.maxRestaurants ?? 5,
             maxUsers: data.maxUsers ?? 10,
             active: true,
@@ -164,6 +168,9 @@ export async function POST(request: NextRequest) {
 
       // Assign user to location
       await tx.userLocation.create({ data: { userId: user.id, locationId: location.id } });
+
+      // Apply vertical preset (additive — enables modules for this vertical)
+      await applyVerticalPreset(tx as any, business.id, (data.vertical ?? 'RETAIL') as any);
 
       return {
         business,
