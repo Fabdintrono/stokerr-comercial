@@ -745,7 +745,7 @@ async function main() {
     { key: 'CRM', name: 'CRM', description: 'Clientes, seguimiento, campañas', status: 'LIVE' },
     { key: 'RESTAURANT', name: 'Restaurante', description: 'Mesas, recetas, cocina, reposición', status: 'LIVE' },
     { key: 'WHOLESALE', name: 'Mayorista', description: 'Listas de precios, crédito', status: 'COMING_SOON' },
-    { key: 'VARIANTS', name: 'Variantes', description: 'Talla/color/modelo/SKU', status: 'COMING_SOON' },
+    { key: 'VARIANTS', name: 'Variantes', description: 'Talla/color/modelo/SKU', status: 'LIVE' },
     { key: 'BATCHES', name: 'Lotes y vencimiento', description: 'Lotes y vencimientos', status: 'COMING_SOON' },
   ];
   for (const m of moduleSeed) {
