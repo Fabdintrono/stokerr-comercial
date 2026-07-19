@@ -328,6 +328,7 @@ model Location {
   InventoryMovement     InventoryMovement[]
   replenishFrom         ReplenishmentRequest[]    @relation("ReplenishFrom")
   replenishTo           ReplenishmentRequest[]    @relation("ReplenishTo")
+  variantInventory      VariantInventory[]
 
   @@map("locations")
 }
@@ -390,6 +391,8 @@ model Product {
   vatRate     Decimal @default(23)
   isActive    Boolean @default(true)
   showInPos   Boolean @default(false)
+  hasVariants    Boolean @default(false)
+  variantOptions Json?
   categoryId  String
   businessId  String
   brandId     String?
@@ -405,8 +408,45 @@ model Product {
   orderItems            OrderItem[]
   transferItems         TransferLineItem[]
   replenishmentItems    ReplenishmentRequestItem[]
+  variants              ProductVariant[]
 
   @@map("products")
+}
+
+model ProductVariant {
+  id         String   @id @default(cuid())
+  productId  String
+  attributes Json
+  sku        String?
+  barcode    String?
+  costPrice  Decimal? @db.Decimal(18, 2)
+  salePrice  Decimal? @db.Decimal(18, 2)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  product       Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
+  inventory     VariantInventory[]
+  movements     InventoryMovement[]
+  orderItems    OrderItem[]
+  invoiceItems  InvoiceLineItem[]
+  transferItems TransferLineItem[]
+
+  @@index([productId])
+  @@map("product_variants")
+}
+
+model VariantInventory {
+  id         String @id @default(cuid())
+  quantity   Float  @default(0)
+  variantId  String
+  locationId String
+
+  variant  ProductVariant @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  location Location       @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@unique([variantId, locationId])
+  @@map("variant_inventory")
 }
 
 model Inventory {
@@ -432,12 +472,14 @@ model InventoryMovement {
   locationId  String
   userId      String
   inventoryId String?
+  variantId   String?
   createdAt   DateTime      @default(now())
 
-  product   Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
-  location  Location   @relation(fields: [locationId], references: [id], onDelete: Cascade)
-  user      User       @relation(fields: [userId], references: [id], onDelete: Cascade)
-  inventory Inventory? @relation(fields: [inventoryId], references: [id])
+  product   Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  location  Location        @relation(fields: [locationId], references: [id], onDelete: Cascade)
+  user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  inventory Inventory?      @relation(fields: [inventoryId], references: [id])
+  variant   ProductVariant? @relation(fields: [variantId], references: [id])
 
   @@map("inventory_movements")
 }
@@ -496,9 +538,11 @@ model InvoiceLineItem {
   totalAmount Decimal
   productId   String
   invoiceId   String
+  variantId   String?
 
   product Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
   invoice PurchaseInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  variant ProductVariant? @relation(fields: [variantId], references: [id])
 
   @@map("invoice_line_items")
 }
@@ -529,9 +573,11 @@ model TransferLineItem {
   quantity   Float
   productId  String
   transferId String
+  variantId  String?
 
-  product  Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
-  transfer Transfer @relation(fields: [transferId], references: [id], onDelete: Cascade)
+  product  Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  transfer Transfer        @relation(fields: [transferId], references: [id], onDelete: Cascade)
+  variant  ProductVariant? @relation(fields: [variantId], references: [id])
 
   @@map("transfer_line_items")
 }
@@ -661,9 +707,11 @@ model OrderItem {
   totalPrice Decimal
   orderId    String
   productId  String
+  variantId  String?
 
-  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  product Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  order   Order           @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
+  variant ProductVariant? @relation(fields: [variantId], references: [id])
 
   @@map("order_items")
 }
