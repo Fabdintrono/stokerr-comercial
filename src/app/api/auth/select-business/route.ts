@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
+import { secureCookies } from '@/lib/auth/secureCookies';
 import { z } from 'zod';
 
 const selectBusinessSchema = z.object({
@@ -60,7 +61,7 @@ export async function POST(request: NextRequest) {
     // Guardar businessId en cookie
     response.cookies.set('businessId', businessId, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
+      secure: secureCookies(),
       sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 30, // 30 días
     });
