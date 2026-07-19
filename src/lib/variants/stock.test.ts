@@ -16,4 +16,8 @@ describe('stockForProduct', () => {
     expect(stockForProduct({ hasVariants: false }, [], [])).toBe(0)
     expect(stockForProduct({ hasVariants: true }, [], [])).toBe(0)
   })
+  it('sums BatchInventory for a product with batches', () => {
+    const product = { hasVariants: false, hasBatches: true }
+    expect(stockForProduct(product, [], [], [{ quantity: 4 }, { quantity: 6 }])).toBe(10)
+  })
 })
