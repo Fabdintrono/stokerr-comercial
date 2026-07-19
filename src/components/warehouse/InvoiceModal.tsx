@@ -36,6 +36,7 @@ interface Product {
   sku: string;
   unit: string;
   hasVariants?: boolean;
+  hasBatches?: boolean;
   costPrice?: number;
 }
 
@@ -49,6 +50,8 @@ interface InvoiceItem {
   productId: string;
   productName: string;
   variantId?: string;
+  lotNumber?: string;
+  expiryDate?: string;
   quantity: number;
   unitPrice: number;
   vatRate: string;
@@ -172,6 +175,8 @@ export function InvoiceModal({
         item.productId = value as string;
         item.productName = product?.name || "";
         item.variantId = undefined;
+        item.lotNumber = undefined;
+        item.expiryDate = undefined;
 
         if (product?.hasVariants) {
           // Trigger variant fetch for this item index
@@ -201,6 +206,10 @@ export function InvoiceModal({
         item[field] = value as number;
       } else if (field === "vatRate") {
         item.vatRate = value as "SIX" | "THIRTEEN" | "TWENTY_THREE";
+      } else if (field === "lotNumber") {
+        item.lotNumber = value as string;
+      } else if (field === "expiryDate") {
+        item.expiryDate = value as string;
       }
 
       // Calculate VAT and total
@@ -259,6 +268,8 @@ export function InvoiceModal({
       items: (formData.items || []).map(item => ({
         ...item,
         ...(item.variantId ? { variantId: item.variantId } : {}),
+        ...(item.lotNumber ? { lotNumber: item.lotNumber } : {}),
+        ...(item.expiryDate ? { expiryDate: item.expiryDate } : {}),
       })),
       supplier: supplier?.name,
     });
@@ -418,6 +429,34 @@ export function InvoiceModal({
                               </Button>
                             </div>
                           )}
+                        </div>
+                      )}
+                      {/* Batch inputs: lote + vencimiento */}
+                      {products.find(p => p.id === item.productId)?.hasBatches && (
+                        <div className="mt-2 p-3 rounded-lg border border-violet-600/40 bg-violet-950/20 space-y-2">
+                          <div className="space-y-1">
+                            <Label className="text-xs text-zinc-400">Lote</Label>
+                            <Input
+                              type="text"
+                              placeholder="Nº de lote"
+                              value={item.lotNumber || ""}
+                              onChange={(e) =>
+                                handleItemChange(index, "lotNumber", e.target.value)
+                              }
+                              className="bg-zinc-800 border-zinc-700 h-8 text-sm"
+                            />
+                          </div>
+                          <div className="space-y-1">
+                            <Label className="text-xs text-zinc-400">Fecha de vencimiento</Label>
+                            <Input
+                              type="date"
+                              value={item.expiryDate || ""}
+                              onChange={(e) =>
+                                handleItemChange(index, "expiryDate", e.target.value)
+                              }
+                              className="bg-zinc-800 border-zinc-700 h-8 text-sm"
+                            />
+                          </div>
                         </div>
                       )}
                     </div>

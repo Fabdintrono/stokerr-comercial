@@ -211,6 +211,8 @@
     "expiryAlertDays": "Expiry alert days",
     "expiryAlertDaysHint": "Alerts will be shown for products expiring within this number of days",
     "allowExpiredSale": "Allow sale of expired products",
-    "allowExpiredSaleHint": "When enabled, products past their expiry date can still be sold"
+    "allowExpiredSaleHint": "When enabled, products past their expiry date can still be sold",
+    "lotNumber": "Lot number",
+    "expiryDate": "Expiry date"
   }
 }

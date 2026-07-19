@@ -211,6 +211,8 @@
     "expiryAlertDays": "Dias de alerta de validade",
     "expiryAlertDaysHint": "Alertas serão exibidos para produtos que vencem dentro deste número de dias",
     "allowExpiredSale": "Permitir venda de produtos vencidos",
-    "allowExpiredSaleHint": "Quando ativo, produtos com data de validade expirada ainda poderão ser vendidos"
+    "allowExpiredSaleHint": "Quando ativo, produtos com data de validade expirada ainda poderão ser vendidos",
+    "lotNumber": "Lote",
+    "expiryDate": "Data de validade"
   }
 }

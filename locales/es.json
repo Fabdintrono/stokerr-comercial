@@ -211,6 +211,8 @@
     "expiryAlertDays": "Días de alerta de vencimiento",
     "expiryAlertDaysHint": "Se mostrarán alertas para los productos que vencen dentro de este número de días",
     "allowExpiredSale": "Permitir venta de productos vencidos",
-    "allowExpiredSaleHint": "Si está activo, se podrán vender productos cuya fecha de vencimiento ya pasó"
+    "allowExpiredSaleHint": "Si está activo, se podrán vender productos cuya fecha de vencimiento ya pasó",
+    "lotNumber": "Lote",
+    "expiryDate": "Fecha de vencimiento"
   }
 }
