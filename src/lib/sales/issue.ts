@@ -1,6 +1,7 @@
 import type { PrismaClient } from '@prisma/client'
 import { formatDocNumber } from './docNumber'
 import { adjustStock } from '@/lib/inventory/adjustStock'
+import { deductBatchesFEFO } from '@/lib/inventory/deductBatchesFEFO'
 
 export async function issueDocument(prisma: PrismaClient, orderId: string): Promise<{ docNumber: string; issuedAt: Date }> {
   return prisma.$transaction(async (tx: any) => {
@@ -19,7 +20,7 @@ export async function issueDocument(prisma: PrismaClient, orderId: string): Prom
     if (!order) throw new Error('order not found')
     if (order.docNumber && order.issuedAt) return { docNumber: order.docNumber, issuedAt: order.issuedAt }
     const businessId = order.location.businessId
-    const business = await tx.business.findUnique({ where: { id: businessId }, select: { docPrefix: true, docNextNumber: true } })
+    const business = await tx.business.findUnique({ where: { id: businessId }, select: { docPrefix: true, docNextNumber: true, allowExpiredSale: true } })
     const n = business.docNextNumber
     const docNumber = formatDocNumber(business.docPrefix, n)
     const issuedAt = new Date()
@@ -32,14 +33,27 @@ export async function issueDocument(prisma: PrismaClient, orderId: string): Prom
     for (const item of order.items ?? []) {
       const hasRecipe = await tx.recipe.findFirst({ where: { productId: item.productId } })
       if (hasRecipe) continue
-      await adjustStock(tx, {
-        productId: item.productId,
-        variantId: item.variantId ?? null,
-        locationId: order.locationId,
-        delta: -item.quantity,
-        type: 'OUT',
-        userId,
-      })
+      const product = await tx.product.findUnique({ where: { id: item.productId }, select: { hasBatches: true } })
+      if (product?.hasBatches) {
+        await deductBatchesFEFO(tx, {
+          productId: item.productId,
+          locationId: order.locationId,
+          quantity: item.quantity,
+          userId,
+          today: issuedAt,
+          allowExpired: business.allowExpiredSale,
+          type: 'OUT',
+        })
+      } else {
+        await adjustStock(tx, {
+          productId: item.productId,
+          variantId: item.variantId ?? null,
+          locationId: order.locationId,
+          delta: -item.quantity,
+          type: 'OUT',
+          userId,
+        })
+      }
     }
 
     return { docNumber, issuedAt }

@@ -8,11 +8,14 @@ function makePrisma(order: any) {
       update: vi.fn().mockImplementation(({ data }: any) => Promise.resolve({ ...order, ...data })),
     },
     business: {
-      findUnique: vi.fn().mockResolvedValue({ docPrefix: 'F-', docNextNumber: 1 }),
+      findUnique: vi.fn().mockResolvedValue({ docPrefix: 'F-', docNextNumber: 1, allowExpiredSale: false }),
       update: vi.fn().mockResolvedValue({}),
     },
     recipe: {
       findFirst: vi.fn().mockResolvedValue(null), // no recipe by default
+    },
+    product: {
+      findUnique: vi.fn().mockResolvedValue({ hasBatches: false }),
     },
     inventory: {
       findUnique: vi.fn().mockResolvedValue(null),

@@ -32,7 +32,16 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ orde
   const business = await prisma.business.findUnique({ where: { id: order.location.businessId } })
   if (!business) return NextResponse.json({ error: 'no business' }, { status: 404 })
 
-  const { docNumber, issuedAt } = await issueDocument(prisma, orderId)
+  let docNumber: string
+  let issuedAt: Date
+  try {
+    ;({ docNumber, issuedAt } = await issueDocument(prisma, orderId))
+  } catch (err: any) {
+    if (/insufficient/i.test(err?.message ?? '')) {
+      return NextResponse.json({ error: 'Stock insuficiente o vencido para completar la venta' }, { status: 409 })
+    }
+    throw err
+  }
 
   const anchor = business.baseCurrency as CurrencyCode
   const secondary = (business.secondaryCurrency ?? null) as CurrencyCode | null
