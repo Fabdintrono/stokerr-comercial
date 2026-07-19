@@ -4,6 +4,8 @@ import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
 import { z } from 'zod';
 import { adjustStock } from '@/lib/inventory/adjustStock';
+import { addBatchStock } from '@/lib/inventory/addBatchStock';
+import { deductBatchesFEFO } from '@/lib/inventory/deductBatchesFEFO';
 
 const createMovementSchema = z.object({
   productId: z.string(),
@@ -12,6 +14,9 @@ const createMovementSchema = z.object({
   type: z.enum(['IN', 'OUT', 'ADJUSTMENT', 'TRANSFER']),
   quantity: z.number(),
   reason: z.string().optional(),
+  batchId: z.string().optional(),
+  lotNumber: z.string().optional(),
+  expiryDate: z.string().optional(),
 });
 
 // POST /api/inventory/movement - Registrar movimiento de inventario
@@ -44,6 +49,7 @@ export async function POST(request: NextRequest) {
         id: data.productId,
         businessId,
       },
+      select: { id: true, hasBatches: true },
     });
 
     if (!product) {
@@ -70,30 +76,50 @@ export async function POST(request: NextRequest) {
 
     // Crear movimiento y actualizar inventario en transacción
     await prisma.$transaction(async (tx) => {
-      if (data.type === 'ADJUSTMENT') {
-        if (data.variantId) {
-          const row = await tx.variantInventory.findUnique({ where: { variantId_locationId: { variantId: data.variantId, locationId: data.locationId } } });
-          if (row) await tx.variantInventory.update({ where: { id: row.id }, data: { quantity: data.quantity } });
-          else await tx.variantInventory.create({ data: { variantId: data.variantId, locationId: data.locationId, quantity: data.quantity } });
-          await tx.inventoryMovement.create({ data: { productId: data.productId, variantId: data.variantId, locationId: data.locationId, userId: session.user.id, type: 'ADJUSTMENT', quantity: data.quantity, reason: data.reason ?? null } });
-        } else {
-          const row = await tx.inventory.findUnique({ where: { productId_locationId: { productId: data.productId, locationId: data.locationId } } });
-          let inventoryId: string | null = null;
-          if (row) { inventoryId = row.id; await tx.inventory.update({ where: { id: row.id }, data: { quantity: data.quantity } }); }
-          else { const c = await tx.inventory.create({ data: { productId: data.productId, locationId: data.locationId, quantity: data.quantity } }); inventoryId = c.id; }
-          await tx.inventoryMovement.create({ data: { productId: data.productId, locationId: data.locationId, userId: session.user.id, type: 'ADJUSTMENT', quantity: data.quantity, reason: data.reason ?? null, inventoryId } });
+      if (product.hasBatches) {
+        if (data.type === 'IN') {
+          if (!data.lotNumber || !data.expiryDate) throw new Error('lote y vencimiento requeridos');
+          const batch = await tx.productBatch.upsert({
+            where: { productId_lotNumber: { productId: data.productId, lotNumber: data.lotNumber } },
+            update: { expiryDate: new Date(data.expiryDate) },
+            create: { productId: data.productId, lotNumber: data.lotNumber, expiryDate: new Date(data.expiryDate) },
+          });
+          await addBatchStock(tx, { batchId: batch.id, productId: data.productId, locationId: data.locationId, delta: data.quantity, type: 'IN', userId: session.user.id, reason: data.reason });
+        } else if (data.type === 'ADJUSTMENT') {
+          if (!data.batchId) throw new Error('batchId requerido para ajuste por lote');
+          const row = await tx.batchInventory.findUnique({ where: { batchId_locationId: { batchId: data.batchId, locationId: data.locationId } } });
+          if (row) await tx.batchInventory.update({ where: { id: row.id }, data: { quantity: data.quantity } });
+          else await tx.batchInventory.create({ data: { batchId: data.batchId, locationId: data.locationId, quantity: data.quantity } });
+          await tx.inventoryMovement.create({ data: { productId: data.productId, batchId: data.batchId, locationId: data.locationId, userId: session.user.id, type: 'ADJUSTMENT', quantity: data.quantity, reason: data.reason ?? null } });
+        } else { // OUT or TRANSFER
+          await deductBatchesFEFO(tx, { productId: data.productId, locationId: data.locationId, quantity: data.quantity, userId: session.user.id, today: new Date(), allowExpired: true, type: data.type === 'TRANSFER' ? 'TRANSFER' : 'OUT' });
         }
       } else {
-        const delta = data.type === 'IN' ? data.quantity : -data.quantity;
-        await adjustStock(tx, {
-          productId: data.productId,
-          variantId: data.variantId ?? null,
-          locationId: data.locationId,
-          delta,
-          type: data.type,
-          userId: session.user.id,
-          reason: data.reason,
-        });
+        if (data.type === 'ADJUSTMENT') {
+          if (data.variantId) {
+            const row = await tx.variantInventory.findUnique({ where: { variantId_locationId: { variantId: data.variantId, locationId: data.locationId } } });
+            if (row) await tx.variantInventory.update({ where: { id: row.id }, data: { quantity: data.quantity } });
+            else await tx.variantInventory.create({ data: { variantId: data.variantId, locationId: data.locationId, quantity: data.quantity } });
+            await tx.inventoryMovement.create({ data: { productId: data.productId, variantId: data.variantId, locationId: data.locationId, userId: session.user.id, type: 'ADJUSTMENT', quantity: data.quantity, reason: data.reason ?? null } });
+          } else {
+            const row = await tx.inventory.findUnique({ where: { productId_locationId: { productId: data.productId, locationId: data.locationId } } });
+            let inventoryId: string | null = null;
+            if (row) { inventoryId = row.id; await tx.inventory.update({ where: { id: row.id }, data: { quantity: data.quantity } }); }
+            else { const c = await tx.inventory.create({ data: { productId: data.productId, locationId: data.locationId, quantity: data.quantity } }); inventoryId = c.id; }
+            await tx.inventoryMovement.create({ data: { productId: data.productId, locationId: data.locationId, userId: session.user.id, type: 'ADJUSTMENT', quantity: data.quantity, reason: data.reason ?? null, inventoryId } });
+          }
+        } else {
+          const delta = data.type === 'IN' ? data.quantity : -data.quantity;
+          await adjustStock(tx, {
+            productId: data.productId,
+            variantId: data.variantId ?? null,
+            locationId: data.locationId,
+            delta,
+            type: data.type,
+            userId: session.user.id,
+            reason: data.reason,
+          });
+        }
       }
     });
 
@@ -105,6 +131,12 @@ export async function POST(request: NextRequest) {
         { error: 'Datos inválidos', details: error.issues },
         { status: 400 }
       );
+    }
+    if (error instanceof Error && (
+      error.message === 'lote y vencimiento requeridos' ||
+      error.message === 'batchId requerido para ajuste por lote'
+    )) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
     }
     return NextResponse.json(
       { error: 'Error al registrar movimiento' },
