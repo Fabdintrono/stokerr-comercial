@@ -25,10 +25,10 @@ describe('registry verticals extension', () => {
       expect(['LIVE', 'COMING_SOON']).toContain(MODULE_REGISTRY[k].status)
     }
   })
-  it('RESTAURANT/VARIANTS are LIVE; WHOLESALE/BATCHES are COMING_SOON', () => {
+  it('RESTAURANT/VARIANTS/BATCHES are LIVE; WHOLESALE is COMING_SOON', () => {
     expect(MODULE_REGISTRY.RESTAURANT.status).toBe('LIVE')
     expect(MODULE_REGISTRY.WHOLESALE.status).toBe('COMING_SOON')
     expect(MODULE_REGISTRY.VARIANTS.status).toBe('LIVE')
-    expect(MODULE_REGISTRY.BATCHES.status).toBe('COMING_SOON')
+    expect(MODULE_REGISTRY.BATCHES.status).toBe('LIVE')
   })
 })

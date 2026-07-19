@@ -17,7 +17,7 @@ export const MODULE_REGISTRY: Record<ModuleKey, ModuleDef> = {
   RESTAURANT: { key: 'RESTAURANT', label: 'Restaurante',    description: 'Mesas, recetas, cocina, reposición local↔almacén', routes: ['/restaurant', '/cocina', '/mesa', '/waiter'], status: 'LIVE' },
   WHOLESALE:  { key: 'WHOLESALE',  label: 'Mayorista',      description: 'Listas de precios, crédito, cuentas por cobrar', routes: [], status: 'COMING_SOON' },
   VARIANTS:   { key: 'VARIANTS',   label: 'Variantes',      description: 'Talla/color/modelo/SKU por producto',  routes: [], status: 'LIVE' },
-  BATCHES:    { key: 'BATCHES',    label: 'Lotes y vencimiento', description: 'Lotes, fechas de vencimiento, presentaciones', routes: [], status: 'COMING_SOON' },
+  BATCHES:    { key: 'BATCHES',    label: 'Lotes y vencimiento', description: 'Lotes, fechas de vencimiento, presentaciones', routes: [], status: 'LIVE' },
 }
 
 export const MODULE_KEYS = Object.keys(MODULE_REGISTRY) as ModuleKey[]
