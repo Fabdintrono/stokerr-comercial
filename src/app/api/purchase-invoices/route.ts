@@ -13,6 +13,7 @@ const createPurchaseInvoiceSchema = z.object({
   lineItems: z.array(
     z.object({
       productId: z.string(),
+      variantId: z.string().optional(),
       quantity: z.number().min(0.01),
       unitPrice: z.number().min(0),
       vatRate: z.number().min(0).max(100), // Porcentaje
@@ -193,6 +194,7 @@ export async function POST(request: NextRequest) {
         data: data.lineItems.map((item) => ({
           invoiceId: purchaseInvoice.id,
           productId: item.productId,
+          variantId: item.variantId ?? null,
           quantity: item.quantity,
           unitPrice: item.unitPrice,
           vatRate: item.vatRate,

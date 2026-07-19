@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
 import { z } from 'zod';
+import { adjustStock } from '@/lib/inventory/adjustStock';
 
 const updateInvoiceStatusSchema = z.object({
   status: z.enum(['DRAFT', 'RECEIVED', 'PAID', 'CANCELLED']),
@@ -78,42 +79,15 @@ export async function PATCH(
 
         if (locationId) {
           for (const item of existing.lineItems) {
-            const inv = await tx.inventory.findUnique({
-              where: { productId_locationId: { productId: item.productId, locationId } },
+            await adjustStock(tx, {
+              productId: item.productId,
+              variantId: item.variantId ?? null,
+              locationId,
+              delta: item.quantity,
+              type: 'IN',
+              userId: session.user.id,
+              reason: 'Recepción de compra',
             });
-
-            if (inv) {
-              await tx.inventory.update({
-                where: { id: inv.id },
-                data: { quantity: inv.quantity + item.quantity },
-              });
-              await tx.inventoryMovement.create({
-                data: {
-                  productId: item.productId,
-                  locationId,
-                  inventoryId: inv.id,
-                  type: 'IN',
-                  quantity: item.quantity,
-                  reason: `Factura de compra #${existing.number}`,
-                  userId: session.user.id,
-                },
-              });
-            } else {
-              const newInv = await tx.inventory.create({
-                data: { productId: item.productId, locationId, quantity: item.quantity },
-              });
-              await tx.inventoryMovement.create({
-                data: {
-                  productId: item.productId,
-                  locationId,
-                  inventoryId: newInv.id,
-                  type: 'IN',
-                  quantity: item.quantity,
-                  reason: `Factura de compra #${existing.number}`,
-                  userId: session.user.id,
-                },
-              });
-            }
           }
         }
       }
