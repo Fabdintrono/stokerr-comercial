@@ -68,51 +68,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Calcular delta según tipo de movimiento
-    let delta: number;
-    if (data.type === 'ADJUSTMENT') {
-      // ADJUSTMENT establece una cantidad absoluta; delta = target - stock actual
-      let current = 0;
-      if (data.variantId) {
-        const row = await prisma.variantInventory.findUnique({
-          where: {
-            variantId_locationId: {
-              variantId: data.variantId,
-              locationId: data.locationId,
-            },
-          },
-        });
-        current = row?.quantity ?? 0;
-      } else {
-        const row = await prisma.inventory.findUnique({
-          where: {
-            productId_locationId: {
-              productId: data.productId,
-              locationId: data.locationId,
-            },
-          },
-        });
-        current = row?.quantity ?? 0;
-      }
-      delta = data.quantity - current;
-    } else if (data.type === 'IN') {
-      delta = data.quantity;
-    } else {
-      // OUT | TRANSFER
-      delta = -data.quantity;
-    }
-
     // Crear movimiento y actualizar inventario en transacción
     await prisma.$transaction(async (tx) => {
-      await adjustStock(tx, {
-        productId: data.productId,
-        variantId: data.variantId ?? null,
-        locationId: data.locationId,
-        delta,
-        type: data.type,
-        userId: session.user.id,
-        reason: data.reason,
-      });
+      if (data.type === 'ADJUSTMENT') {
+        if (data.variantId) {
+          const row = await tx.variantInventory.findUnique({ where: { variantId_locationId: { variantId: data.variantId, locationId: data.locationId } } });
+          if (row) await tx.variantInventory.update({ where: { id: row.id }, data: { quantity: data.quantity } });
+          else await tx.variantInventory.create({ data: { variantId: data.variantId, locationId: data.locationId, quantity: data.quantity } });
+          await tx.inventoryMovement.create({ data: { productId: data.productId, variantId: data.variantId, locationId: data.locationId, userId: session.user.id, type: 'ADJUSTMENT', quantity: data.quantity, reason: data.reason ?? null } });
+        } else {
+          const row = await tx.inventory.findUnique({ where: { productId_locationId: { productId: data.productId, locationId: data.locationId } } });
+          let inventoryId: string | null = null;
+          if (row) { inventoryId = row.id; await tx.inventory.update({ where: { id: row.id }, data: { quantity: data.quantity } }); }
+          else { const c = await tx.inventory.create({ data: { productId: data.productId, locationId: data.locationId, quantity: data.quantity } }); inventoryId = c.id; }
+          await tx.inventoryMovement.create({ data: { productId: data.productId, locationId: data.locationId, userId: session.user.id, type: 'ADJUSTMENT', quantity: data.quantity, reason: data.reason ?? null, inventoryId } });
+        }
+      } else {
+        const delta = data.type === 'IN' ? data.quantity : -data.quantity;
+        await adjustStock(tx, {
+          productId: data.productId,
+          variantId: data.variantId ?? null,
+          locationId: data.locationId,
+          delta,
+          type: data.type,
+          userId: session.user.id,
+          reason: data.reason,
+        });
+      }
     });
 
     return NextResponse.json({ ok: true }, { status: 201 });

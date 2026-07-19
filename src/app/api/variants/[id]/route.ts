@@ -34,6 +34,11 @@ async function guard(req: NextRequest) {
 export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const g = await guard(request); if (g.error) return g.error
   const { id } = await params
+  const owned = await prisma.productVariant.findFirst({
+    where: { id, product: { businessId: g.businessId } },
+    select: { id: true },
+  })
+  if (!owned) return NextResponse.json({ error: 'Variante no encontrada' }, { status: 404 })
   const data = patchSchema.parse(await request.json())
   const variant = await prisma.productVariant.update({ where: { id }, data })
   return NextResponse.json({ variant })
@@ -42,6 +47,11 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
 export async function DELETE(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const g = await guard(request); if (g.error) return g.error
   const { id } = await params
+  const owned = await prisma.productVariant.findFirst({
+    where: { id, product: { businessId: g.businessId } },
+    select: { id: true },
+  })
+  if (!owned) return NextResponse.json({ error: 'Variante no encontrada' }, { status: 404 })
   await prisma.productVariant.update({ where: { id }, data: { isActive: false } })
   return NextResponse.json({ ok: true })
 }
