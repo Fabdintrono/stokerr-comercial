@@ -151,6 +151,20 @@
       "RETAIL": "Store"
     }
   },
+  "variants": {
+    "title": "Product variants",
+    "addVariant": "Add variant",
+    "attributeName": "Attribute name",
+    "attributeValue": "Attribute value",
+    "addAttribute": "Add attribute",
+    "sku": "SKU",
+    "salePrice": "Sale price",
+    "costPrice": "Cost price",
+    "save": "Save variant",
+    "deactivate": "Deactivate",
+    "noVariants": "No variants registered",
+    "hasVariantsToggle": "Has variants"
+  },
   "settings": {
     "branding": "Branding",
     "logo": "Logo",

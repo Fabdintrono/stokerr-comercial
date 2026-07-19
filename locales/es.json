@@ -151,6 +151,20 @@
       "RETAIL": "Comercio"
     }
   },
+  "variants": {
+    "title": "Variantes del producto",
+    "addVariant": "Agregar variante",
+    "attributeName": "Nombre del atributo",
+    "attributeValue": "Valor del atributo",
+    "addAttribute": "Agregar atributo",
+    "sku": "SKU",
+    "salePrice": "Precio de venta",
+    "costPrice": "Precio de costo",
+    "save": "Guardar variante",
+    "deactivate": "Desactivar",
+    "noVariants": "Sin variantes registradas",
+    "hasVariantsToggle": "Tiene variantes"
+  },
   "settings": {
     "branding": "Marca",
     "logo": "Logo",
