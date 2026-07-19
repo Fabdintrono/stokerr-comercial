@@ -3,9 +3,11 @@ import { getServerSession } from 'next-auth';
 import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
 import { z } from 'zod';
+import { adjustStock } from '@/lib/inventory/adjustStock';
 
 const createMovementSchema = z.object({
   productId: z.string(),
+  variantId: z.string().optional(),
   locationId: z.string(),
   type: z.enum(['IN', 'OUT', 'ADJUSTMENT', 'TRANSFER']),
   quantity: z.number(),
@@ -66,67 +68,54 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Crear movimiento y actualizar inventario en transacción
-    const result = await prisma.$transaction(async (tx) => {
-      // Obtener o crear registro de inventario
-      let inventory = await tx.inventory.findUnique({
-        where: {
-          productId_locationId: {
-            productId: data.productId,
-            locationId: data.locationId,
-          },
-        },
-      });
-
-      if (!inventory) {
-        inventory = await tx.inventory.create({
-          data: {
-            productId: data.productId,
-            locationId: data.locationId,
-            quantity: 0,
+    // Calcular delta según tipo de movimiento
+    let delta: number;
+    if (data.type === 'ADJUSTMENT') {
+      // ADJUSTMENT establece una cantidad absoluta; delta = target - stock actual
+      let current = 0;
+      if (data.variantId) {
+        const row = await prisma.variantInventory.findUnique({
+          where: {
+            variantId_locationId: {
+              variantId: data.variantId,
+              locationId: data.locationId,
+            },
           },
         });
+        current = row?.quantity ?? 0;
+      } else {
+        const row = await prisma.inventory.findUnique({
+          where: {
+            productId_locationId: {
+              productId: data.productId,
+              locationId: data.locationId,
+            },
+          },
+        });
+        current = row?.quantity ?? 0;
       }
+      delta = data.quantity - current;
+    } else if (data.type === 'IN') {
+      delta = data.quantity;
+    } else {
+      // OUT | TRANSFER
+      delta = -data.quantity;
+    }
 
-      // Calcular nueva cantidad
-      let newQuantity = inventory.quantity;
-      switch (data.type) {
-        case 'IN':
-          newQuantity += data.quantity;
-          break;
-        case 'OUT':
-          newQuantity -= data.quantity;
-          break;
-        case 'ADJUSTMENT':
-          newQuantity = data.quantity;
-          break;
-        case 'TRANSFER':
-          newQuantity -= data.quantity;
-          break;
-      }
-
-      // Actualizar inventario
-      const updatedInventory = await tx.inventory.update({
-        where: { id: inventory.id },
-        data: { quantity: newQuantity },
+    // Crear movimiento y actualizar inventario en transacción
+    await prisma.$transaction(async (tx) => {
+      await adjustStock(tx, {
+        productId: data.productId,
+        variantId: data.variantId ?? null,
+        locationId: data.locationId,
+        delta,
+        type: data.type,
+        userId: session.user.id,
+        reason: data.reason,
       });
-
-      // Crear movimiento
-      const movement = await tx.inventoryMovement.create({
-        data: {
-          productId: data.productId,
-          locationId: data.locationId,
-          type: data.type,
-          quantity: data.quantity,
-          reason: data.reason,
-          userId: session.user.id,
-        },
-      });
-
-      return { inventory: updatedInventory, movement };
     });
 
-    return NextResponse.json(result, { status: 201 });
+    return NextResponse.json({ ok: true }, { status: 201 });
   } catch (error) {
     console.error('Error creating movement:', error);
     if (error instanceof z.ZodError) {
