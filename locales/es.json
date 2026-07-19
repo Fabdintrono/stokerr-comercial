@@ -213,6 +213,17 @@
     "allowExpiredSale": "Permitir venta de productos vencidos",
     "allowExpiredSaleHint": "Si está activo, se podrán vender productos cuya fecha de vencimiento ya pasó",
     "lotNumber": "Lote",
-    "expiryDate": "Fecha de vencimiento"
+    "expiryDate": "Fecha de vencimiento",
+    "manageLots": "Maneja lotes y vencimiento",
+    "cannotWithVariants": "Un producto con variantes no puede manejar lotes",
+    "expiryReport": "Reporte de vencimientos",
+    "status": "Estado",
+    "expired": "Vencido",
+    "near": "Por vencer",
+    "ok": "OK",
+    "quantity": "Cantidad",
+    "location": "Ubicación",
+    "product": "Producto",
+    "noData": "Sin datos de lotes"
   }
 }

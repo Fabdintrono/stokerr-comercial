@@ -213,6 +213,17 @@
     "allowExpiredSale": "Permitir venda de produtos vencidos",
     "allowExpiredSaleHint": "Quando ativo, produtos com data de validade expirada ainda poderão ser vendidos",
     "lotNumber": "Lote",
-    "expiryDate": "Data de validade"
+    "expiryDate": "Data de validade",
+    "manageLots": "Gerenciar lotes e validade",
+    "cannotWithVariants": "Um produto com variantes não pode gerenciar lotes",
+    "expiryReport": "Relatório de validade",
+    "status": "Status",
+    "expired": "Vencido",
+    "near": "Próximo do vencimento",
+    "ok": "OK",
+    "quantity": "Quantidade",
+    "location": "Localização",
+    "product": "Produto",
+    "noData": "Sem dados de lotes"
   }
 }

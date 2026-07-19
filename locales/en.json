@@ -213,6 +213,17 @@
     "allowExpiredSale": "Allow sale of expired products",
     "allowExpiredSaleHint": "When enabled, products past their expiry date can still be sold",
     "lotNumber": "Lot number",
-    "expiryDate": "Expiry date"
+    "expiryDate": "Expiry date",
+    "manageLots": "Manage lots and expiry",
+    "cannotWithVariants": "A product with variants cannot manage lots",
+    "expiryReport": "Expiry report",
+    "status": "Status",
+    "expired": "Expired",
+    "near": "Near expiry",
+    "ok": "OK",
+    "quantity": "Quantity",
+    "location": "Location",
+    "product": "Product",
+    "noData": "No lot data"
   }
 }
