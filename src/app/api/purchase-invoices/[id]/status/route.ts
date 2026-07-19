@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
 import { z } from 'zod';
 import { adjustStock } from '@/lib/inventory/adjustStock';
+import { addBatchStock } from '@/lib/inventory/addBatchStock';
 
 const updateInvoiceStatusSchema = z.object({
   status: z.enum(['DRAFT', 'RECEIVED', 'PAID', 'CANCELLED']),
@@ -37,7 +38,13 @@ export async function PATCH(
     const existing = await prisma.purchaseInvoice.findFirst({
       where: { id, businessId },
       include: {
-        lineItems: true,
+        lineItems: {
+          include: {
+            product: {
+              select: { id: true, hasBatches: true },
+            },
+          },
+        },
       },
     });
 
@@ -79,15 +86,32 @@ export async function PATCH(
 
         if (locationId) {
           for (const item of existing.lineItems) {
-            await adjustStock(tx, {
-              productId: item.productId,
-              variantId: item.variantId ?? null,
-              locationId,
-              delta: item.quantity,
-              type: 'IN',
-              userId: session.user.id,
-              reason: 'Recepción de compra',
-            });
+            if (item.product.hasBatches && item.lotNumber && item.expiryDate) {
+              const batch = await tx.productBatch.upsert({
+                where: { productId_lotNumber: { productId: item.productId, lotNumber: item.lotNumber } },
+                update: { expiryDate: new Date(item.expiryDate) },
+                create: { productId: item.productId, lotNumber: item.lotNumber, expiryDate: new Date(item.expiryDate) },
+              });
+              await addBatchStock(tx, {
+                batchId: batch.id,
+                productId: item.productId,
+                locationId,
+                delta: item.quantity,
+                type: 'IN',
+                userId: session.user.id,
+                reason: 'Recepción de compra',
+              });
+            } else {
+              await adjustStock(tx, {
+                productId: item.productId,
+                variantId: item.variantId ?? null,
+                locationId,
+                delta: item.quantity,
+                type: 'IN',
+                userId: session.user.id,
+                reason: 'Recepción de compra',
+              });
+            }
           }
         }
       }

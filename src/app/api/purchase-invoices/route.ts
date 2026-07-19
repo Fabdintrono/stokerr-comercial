@@ -17,6 +17,8 @@ const createPurchaseInvoiceSchema = z.object({
       quantity: z.number().min(0.01),
       unitPrice: z.number().min(0),
       vatRate: z.number().min(0).max(100), // Porcentaje
+      lotNumber: z.string().optional(),
+      expiryDate: z.string().optional(),
     })
   ).min(1, 'Debe tener al menos un item'),
 });
@@ -199,6 +201,8 @@ export async function POST(request: NextRequest) {
           unitPrice: item.unitPrice,
           vatRate: item.vatRate,
           totalAmount: item.quantity * item.unitPrice * (1 + item.vatRate / 100),
+          lotNumber: item.lotNumber ?? null,
+          expiryDate: item.expiryDate ? new Date(item.expiryDate) : null,
         })),
       });
 
