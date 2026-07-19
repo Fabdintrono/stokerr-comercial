@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth';
 import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
 import { adjustStock } from '@/lib/inventory/adjustStock';
+import { transferBatchStock } from '@/lib/inventory/transferBatchStock';
 
 // PATCH /api/transfers/[id] — accept or reject (by destination location)
 export async function PATCH(
@@ -29,7 +30,7 @@ export async function PATCH(
       include: {
         fromLocation: true,
         toLocation: true,
-        lineItems: { include: { product: true } },
+        lineItems: { include: { product: { select: { id: true, hasBatches: true } } } },
       },
     });
 
@@ -55,22 +56,33 @@ export async function PATCH(
       await tx.transfer.update({ where: { id }, data: { status: 'COMPLETED' } });
 
       for (const item of transfer.lineItems) {
-        await adjustStock(tx, {
-          productId: item.productId,
-          variantId: item.variantId ?? null,
-          locationId: transfer.fromLocationId,
-          delta: -item.quantity,
-          type: 'TRANSFER',
-          userId: session.user.id,
-        });
-        await adjustStock(tx, {
-          productId: item.productId,
-          variantId: item.variantId ?? null,
-          locationId: transfer.toLocationId,
-          delta: item.quantity,
-          type: 'IN',
-          userId: session.user.id,
-        });
+        if (item.product.hasBatches) {
+          await transferBatchStock(tx, {
+            productId: item.productId,
+            fromLocationId: transfer.fromLocationId,
+            toLocationId: transfer.toLocationId,
+            quantity: item.quantity,
+            userId: session.user.id,
+            today: new Date(),
+          });
+        } else {
+          await adjustStock(tx, {
+            productId: item.productId,
+            variantId: item.variantId ?? null,
+            locationId: transfer.fromLocationId,
+            delta: -item.quantity,
+            type: 'TRANSFER',
+            userId: session.user.id,
+          });
+          await adjustStock(tx, {
+            productId: item.productId,
+            variantId: item.variantId ?? null,
+            locationId: transfer.toLocationId,
+            delta: item.quantity,
+            type: 'IN',
+            userId: session.user.id,
+          });
+        }
       }
 
       // Mark transfer notification as read
