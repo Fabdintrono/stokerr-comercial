@@ -163,7 +163,8 @@
     "save": "Guardar variante",
     "deactivate": "Desactivar",
     "noVariants": "Sin variantes registradas",
-    "hasVariantsToggle": "Tiene variantes"
+    "hasVariantsToggle": "Tiene variantes",
+    "selectVariant": "Seleccionar variante"
   },
   "settings": {
     "branding": "Marca",

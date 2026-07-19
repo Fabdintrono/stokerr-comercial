@@ -163,7 +163,8 @@
     "save": "Save variant",
     "deactivate": "Deactivate",
     "noVariants": "No variants registered",
-    "hasVariantsToggle": "Has variants"
+    "hasVariantsToggle": "Has variants",
+    "selectVariant": "Select variant"
   },
   "settings": {
     "branding": "Branding",

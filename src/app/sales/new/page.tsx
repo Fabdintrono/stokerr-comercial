@@ -3,8 +3,11 @@ import { useEffect, useState } from 'react'
 import toast from 'react-hot-toast'
 import { useAuth } from '@/components/providers/AuthProvider'
 import { useI18n } from '@/lib/i18n'
+import { variantDisplayName } from '@/lib/variants/displayName'
+import { effectivePrice } from '@/lib/variants/pricing'
 
-interface Line { productId: string; description: string; quantity: number; unitPrice: number }
+interface Variant { id: string; attributes: Record<string, string>; sku?: string | null; salePrice?: string | null }
+interface Line { productId: string; description: string; quantity: number; unitPrice: number; variantId?: string }
 
 export default function NewInvoicePage() {
   const { user } = useAuth()
@@ -16,6 +19,12 @@ export default function NewInvoicePage() {
   const [locationId, setLocationId] = useState('')
   const [lines, setLines] = useState<Line[]>([])
 
+  // Variant picker state
+  const [pendingProduct, setPendingProduct] = useState<any | null>(null)
+  const [variants, setVariants] = useState<Variant[]>([])
+  const [variantsLoading, setVariantsLoading] = useState(false)
+  const [selectedVariantId, setSelectedVariantId] = useState('')
+
   useEffect(() => {
     fetch('/api/customers').then(r => r.json()).then(setCustomers)
     fetch('/api/locations').then(r => r.json()).then(d => { const l = Array.isArray(d) ? d : (d.locations ?? []); setLocations(l); if (l[0]) setLocationId(l[0].id) })
@@ -25,7 +34,30 @@ export default function NewInvoicePage() {
   const total = lines.reduce((s, l) => s + l.quantity * l.unitPrice, 0)
 
   function addLine(p: any) {
+    if (p.hasVariants) {
+      setPendingProduct(p)
+      setSelectedVariantId('')
+      setVariants([])
+      setVariantsLoading(true)
+      fetch(`/api/variants?productId=${p.id}`)
+        .then(r => r.json())
+        .then(d => { setVariants(d.variants ?? []); setVariantsLoading(false) })
+        .catch(() => setVariantsLoading(false))
+      return
+    }
     setLines(ls => [...ls, { productId: p.id, description: p.name, quantity: 1, unitPrice: Number(p.salePrice) }])
+  }
+
+  function confirmVariant() {
+    if (!pendingProduct || !selectedVariantId) return
+    const variant = variants.find(v => v.id === selectedVariantId)
+    if (!variant) return
+    const price = Number(effectivePrice(variant, { salePrice: String(pendingProduct.salePrice) }))
+    const label = `${pendingProduct.name} — ${variantDisplayName(variant.attributes)}${variant.sku ? ` (${variant.sku})` : ''}`
+    setLines(ls => [...ls, { productId: pendingProduct.id, variantId: variant.id, description: label, quantity: 1, unitPrice: price }])
+    setPendingProduct(null)
+    setSelectedVariantId('')
+    setVariants([])
   }
 
   async function emit() {
@@ -34,7 +66,7 @@ export default function NewInvoicePage() {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         locationId, userId: user?.id, customerId: customerId || undefined,
-        items: lines.map(l => ({ productId: l.productId, quantity: l.quantity, unitPrice: l.unitPrice })),
+        items: lines.map(l => ({ productId: l.productId, quantity: l.quantity, unitPrice: l.unitPrice, ...(l.variantId ? { variantId: l.variantId } : {}) })),
       }),
     })
     if (!res.ok) return toast.error(t('invoicing.emitError'))
@@ -63,6 +95,45 @@ export default function NewInvoicePage() {
           ))}
         </div>
       </div>
+
+      {/* Variant picker modal */}
+      {pendingProduct && (
+        <div className="rounded-lg border border-primary bg-card p-4 space-y-3">
+          <div className="font-medium text-foreground">{pendingProduct.name} — {t('variants.selectVariant')}</div>
+          {variantsLoading ? (
+            <div className="text-sm text-muted-foreground">…</div>
+          ) : (
+            <select
+              value={selectedVariantId}
+              onChange={e => setSelectedVariantId(e.target.value)}
+              className="w-full rounded-md bg-background border border-border p-2"
+            >
+              <option value="">{t('variants.selectVariant')}</option>
+              {variants.map(v => {
+                const price = Number(effectivePrice(v, { salePrice: String(pendingProduct.salePrice) }))
+                const label = variantDisplayName(v.attributes) + (v.sku ? ` · ${v.sku}` : '') + ` — ${price.toFixed(2)}`
+                return <option key={v.id} value={v.id}>{label}</option>
+              })}
+            </select>
+          )}
+          <div className="flex gap-2">
+            <button
+              onClick={confirmVariant}
+              disabled={!selectedVariantId}
+              className="rounded-md bg-primary px-4 py-1.5 text-primary-foreground text-sm font-medium disabled:opacity-40"
+            >
+              {t('invoicing.addProduct')}
+            </button>
+            <button
+              onClick={() => { setPendingProduct(null); setVariants([]); setSelectedVariantId('') }}
+              className="rounded-md border border-border px-4 py-1.5 text-sm text-foreground"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="rounded-lg border border-border bg-card divide-y divide-border">
         {lines.map((l, i) => (
           <div key={i} className="p-3 flex items-center gap-3">
