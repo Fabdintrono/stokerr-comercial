@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { effectiveRate } from '@/lib/rates/rateEngine';
 import { makeRateLoader } from '@/lib/rates/loadRates';
 import type { CurrencyCode } from '@/lib/currency';
+import { effectivePrice } from '@/lib/variants/pricing';
 
 const createOrderSchema = z.object({
   locationId: z.string(),
@@ -14,6 +15,7 @@ const createOrderSchema = z.object({
   customerId: z.string().optional(),
   items: z.array(z.object({
     productId: z.string(),
+    variantId: z.string().optional(),
     quantity: z.number().min(0.01),
     unitPrice: z.number().min(0),
   })).min(1),
@@ -128,7 +130,29 @@ export async function POST(request: NextRequest) {
     });
     const number = `P-${datePrefix}-${String(count + 1).padStart(3, '0')}`;
 
-    const totalAmount = validated.items.reduce(
+    // Resolve effective unit price for each item.
+    // For variant lines: load variant + product and use effectivePrice.
+    // For simple lines: keep the caller-supplied unitPrice as-is.
+    const resolvedItems = await Promise.all(
+      validated.items.map(async (item) => {
+        if (item.variantId) {
+          const variant = await prisma.productVariant.findUnique({
+            where: { id: item.variantId },
+            select: { salePrice: true, product: { select: { salePrice: true } } },
+          });
+          if (variant) {
+            const priceStr = effectivePrice(
+              { salePrice: variant.salePrice?.toString() ?? null },
+              { salePrice: variant.product.salePrice.toString() }
+            );
+            return { ...item, unitPrice: parseFloat(priceStr) };
+          }
+        }
+        return item;
+      })
+    );
+
+    const totalAmount = resolvedItems.reduce(
       (sum, item) => sum + item.quantity * item.unitPrice,
       0
     );
@@ -145,8 +169,9 @@ export async function POST(request: NextRequest) {
         rateToBase,
         customerId: validated.customerId,
         items: {
-          create: validated.items.map((item) => ({
+          create: resolvedItems.map((item) => ({
             productId: item.productId,
+            variantId: item.variantId ?? null,
             quantity: item.quantity,
             unitPrice: item.unitPrice,
             totalPrice: item.quantity * item.unitPrice,
