@@ -24,4 +24,10 @@ describe('pickBatchesFEFO', () => {
   it('throws when available (per policy) is insufficient', () => {
     expect(() => pickBatchesFEFO(batches, 20, { today, allowExpired: false })).toThrow(/insufficient/i)
   })
+  it('a batch expiring exactly today is still eligible (not treated as expired)', () => {
+    const withTime = new Date('2026-07-19T15:30:00Z') // today, mid-afternoon
+    const bs = [{ id: 'today', quantity: 3, expiryDate: new Date('2026-07-19') }]
+    const picks = pickBatchesFEFO(bs, 2, { today: withTime, allowExpired: false })
+    expect(picks).toEqual([{ id: 'today', take: 2 }])
+  })
 })

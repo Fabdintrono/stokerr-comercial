@@ -45,6 +45,9 @@ export async function POST(request: NextRequest) {
   const data = createSchema.parse(await request.json())
   const product = await prisma.product.findFirst({ where: { id: data.productId, businessId } })
   if (!product) return NextResponse.json({ error: 'Producto no encontrado' }, { status: 404 })
+  if (product.hasBatches) {
+    return NextResponse.json({ error: 'Un producto con lotes no puede tener variantes' }, { status: 409 })
+  }
   const variant = await prisma.productVariant.create({
     data: {
       productId: data.productId,

@@ -6,8 +6,9 @@ export function pickBatchesFEFO(
   quantity: number,
   opts: { today: Date; allowExpired: boolean },
 ): FefoPick[] {
+  const todayFloor = new Date(Date.UTC(opts.today.getUTCFullYear(), opts.today.getUTCMonth(), opts.today.getUTCDate()))
   const eligible = batches
-    .filter(b => b.quantity > 0 && (opts.allowExpired || b.expiryDate.getTime() >= opts.today.getTime()))
+    .filter(b => b.quantity > 0 && (opts.allowExpired || b.expiryDate.getTime() >= todayFloor.getTime()))
     .sort((a, b) => a.expiryDate.getTime() - b.expiryDate.getTime())
 
   const total = eligible.reduce((s, b) => s + b.quantity, 0)

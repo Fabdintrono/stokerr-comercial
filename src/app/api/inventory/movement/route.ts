@@ -87,6 +87,8 @@ export async function POST(request: NextRequest) {
           await addBatchStock(tx, { batchId: batch.id, productId: data.productId, locationId: data.locationId, delta: data.quantity, type: 'IN', userId: session.user.id, reason: data.reason });
         } else if (data.type === 'ADJUSTMENT') {
           if (!data.batchId) throw new Error('batchId requerido para ajuste por lote');
+          const ownedBatch = await tx.productBatch.findFirst({ where: { id: data.batchId, productId: data.productId } })
+          if (!ownedBatch) throw new Error('lote no encontrado')
           const row = await tx.batchInventory.findUnique({ where: { batchId_locationId: { batchId: data.batchId, locationId: data.locationId } } });
           if (row) await tx.batchInventory.update({ where: { id: row.id }, data: { quantity: data.quantity } });
           else await tx.batchInventory.create({ data: { batchId: data.batchId, locationId: data.locationId, quantity: data.quantity } });
@@ -134,7 +136,8 @@ export async function POST(request: NextRequest) {
     }
     if (error instanceof Error && (
       error.message === 'lote y vencimiento requeridos' ||
-      error.message === 'batchId requerido para ajuste por lote'
+      error.message === 'batchId requerido para ajuste por lote' ||
+      error.message === 'lote no encontrado'
     )) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
