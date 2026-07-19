@@ -164,7 +164,9 @@
     "deactivate": "Desativar",
     "noVariants": "Nenhuma variante registrada",
     "hasVariantsToggle": "Possui variantes",
-    "selectVariant": "Selecionar variante"
+    "selectVariant": "Selecionar variante",
+    "variant": "Variante",
+    "stock": "Estoque"
   },
   "settings": {
     "branding": "Marca",

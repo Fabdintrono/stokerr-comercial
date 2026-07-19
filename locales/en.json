@@ -164,7 +164,9 @@
     "deactivate": "Deactivate",
     "noVariants": "No variants registered",
     "hasVariantsToggle": "Has variants",
-    "selectVariant": "Select variant"
+    "selectVariant": "Select variant",
+    "variant": "Variant",
+    "stock": "Stock"
   },
   "settings": {
     "branding": "Branding",
