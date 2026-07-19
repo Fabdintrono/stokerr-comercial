@@ -142,6 +142,10 @@ model Business {
   multiCurrency     Boolean    @default(false)
   rateSource        RateSource @default(MANUAL)
 
+  // Lotes y vencimiento
+  expiryAlertDays  Int     @default(30)
+  allowExpiredSale Boolean @default(false)
+
   // Branding + comprobantes (Bloque B)
   logoUrl        String?
   address        String?
@@ -329,6 +333,7 @@ model Location {
   replenishFrom         ReplenishmentRequest[]    @relation("ReplenishFrom")
   replenishTo           ReplenishmentRequest[]    @relation("ReplenishTo")
   variantInventory      VariantInventory[]
+  batchInventory        BatchInventory[]
 
   @@map("locations")
 }
@@ -392,6 +397,7 @@ model Product {
   isActive    Boolean @default(true)
   showInPos   Boolean @default(false)
   hasVariants    Boolean @default(false)
+  hasBatches     Boolean @default(false)
   variantOptions Json?
   categoryId  String
   businessId  String
@@ -409,6 +415,7 @@ model Product {
   transferItems         TransferLineItem[]
   replenishmentItems    ReplenishmentRequestItem[]
   variants              ProductVariant[]
+  batches               ProductBatch[]
 
   @@map("products")
 }
@@ -434,6 +441,36 @@ model ProductVariant {
 
   @@index([productId])
   @@map("product_variants")
+}
+
+model ProductBatch {
+  id         String   @id @default(cuid())
+  productId  String
+  lotNumber  String
+  expiryDate DateTime @db.Date
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  product   Product             @relation(fields: [productId], references: [id], onDelete: Cascade)
+  inventory BatchInventory[]
+  movements InventoryMovement[]
+
+  @@unique([productId, lotNumber])
+  @@index([productId])
+  @@map("product_batches")
+}
+
+model BatchInventory {
+  id         String @id @default(cuid())
+  quantity   Float  @default(0)
+  batchId    String
+  locationId String
+
+  batch    ProductBatch @relation(fields: [batchId], references: [id], onDelete: Cascade)
+  location Location     @relation(fields: [locationId], references: [id], onDelete: Cascade)
+
+  @@unique([batchId, locationId])
+  @@map("batch_inventory")
 }
 
 model VariantInventory {
@@ -473,6 +510,7 @@ model InventoryMovement {
   userId      String
   inventoryId String?
   variantId   String?
+  batchId     String?
   createdAt   DateTime      @default(now())
 
   product   Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
@@ -480,6 +518,7 @@ model InventoryMovement {
   user      User            @relation(fields: [userId], references: [id], onDelete: Cascade)
   inventory Inventory?      @relation(fields: [inventoryId], references: [id])
   variant   ProductVariant? @relation(fields: [variantId], references: [id])
+  batch     ProductBatch?   @relation(fields: [batchId], references: [id])
 
   @@map("inventory_movements")
 }
@@ -539,6 +578,8 @@ model InvoiceLineItem {
   productId   String
   invoiceId   String
   variantId   String?
+  lotNumber   String?
+  expiryDate  DateTime? @db.Date
 
   product Product         @relation(fields: [productId], references: [id], onDelete: Cascade)
   invoice PurchaseInvoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
