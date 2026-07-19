@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useAuth } from "@/components/providers/AuthProvider";
-import { Settings, User, Bell, Shield, Building2 } from "lucide-react";
+import { Settings, User, Bell, Shield, Building2, CalendarClock } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useI18n } from "@/lib/i18n";
+import { useModules } from "@/components/modules/ModulesProvider";
 
 interface BusinessProfile {
   logoUrl?: string | null;
@@ -19,14 +20,18 @@ interface BusinessProfile {
   taxEnabled: boolean;
   defaultTaxRate: number;
   taxLabel: string;
+  expiryAlertDays: number;
+  allowExpiredSale: boolean;
 }
 
 export default function SettingsPage() {
   const { user } = useAuth();
   const { t } = useI18n();
+  const { has } = useModules();
   const [profile, setProfile] = useState<BusinessProfile>({
     logoUrl: '', address: '', phone: '', taxId: '',
     docPrefix: 'F-', taxEnabled: false, defaultTaxRate: 0, taxLabel: 'IVA',
+    expiryAlertDays: 30, allowExpiredSale: false,
   });
 
   useEffect(() => {
@@ -248,6 +253,49 @@ export default function SettingsPage() {
           </Button>
         </CardContent>
       </Card>
+
+      {/* Batches — expiry settings */}
+      {has('BATCHES') && (
+        <Card className="border-zinc-800">
+          <CardHeader>
+            <CardTitle className="text-base flex items-center gap-2">
+              <CalendarClock className="h-4 w-4 text-emerald-400" />
+              {t('batches.settingsTitle')}
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-zinc-300">{t('batches.expiryAlertDays')}</Label>
+              <Input
+                type="number"
+                min={1}
+                value={profile.expiryAlertDays}
+                onChange={e => setProfile(p => ({ ...p, expiryAlertDays: Math.max(1, Number(e.target.value)) }))}
+                className="bg-zinc-800/50 border-zinc-700 text-white w-32"
+              />
+              <p className="text-xs text-zinc-400">{t('batches.expiryAlertDaysHint')}</p>
+            </div>
+            <div className="flex items-center gap-3 py-2 border-b border-zinc-800">
+              <div>
+                <p className="text-sm font-medium text-white">{t('batches.allowExpiredSale')}</p>
+                <p className="text-xs text-zinc-400">{t('batches.allowExpiredSaleHint')}</p>
+              </div>
+              <label className="relative inline-flex items-center cursor-pointer ml-auto">
+                <input
+                  type="checkbox"
+                  checked={profile.allowExpiredSale}
+                  onChange={e => setProfile(p => ({ ...p, allowExpiredSale: e.target.checked }))}
+                  className="sr-only peer"
+                />
+                <div className="w-11 h-6 bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-emerald-500"></div>
+              </label>
+            </div>
+            <Button onClick={saveProfile} className="bg-emerald-500 hover:bg-emerald-600 text-white">
+              {t('settings.saveConfig')}
+            </Button>
+          </CardContent>
+        </Card>
+      )}
     </div>
   );
 }

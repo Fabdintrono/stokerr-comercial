@@ -14,12 +14,14 @@ const schema = z.object({
   taxEnabled: z.boolean(),
   defaultTaxRate: z.number().min(0),
   taxLabel: z.string().min(1),
+  expiryAlertDays: z.number().int().min(1).optional(),
+  allowExpiredSale: z.boolean().optional(),
 })
 
 export async function GET(req: NextRequest) {
   const session = await getServerSession(authOptions); if (!session) return NextResponse.json({ error: 'unauthorized' }, { status: 401 })
   const id = bid(req); if (!id) return NextResponse.json({ error: 'no business' }, { status: 400 })
-  const b = await prisma.business.findUnique({ where: { id }, select: { logoUrl: true, address: true, phone: true, taxId: true, docPrefix: true, taxEnabled: true, defaultTaxRate: true, taxLabel: true } })
+  const b = await prisma.business.findUnique({ where: { id }, select: { logoUrl: true, address: true, phone: true, taxId: true, docPrefix: true, taxEnabled: true, defaultTaxRate: true, taxLabel: true, expiryAlertDays: true, allowExpiredSale: true } })
   return NextResponse.json(b)
 }
 

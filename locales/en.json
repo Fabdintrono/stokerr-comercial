@@ -205,5 +205,12 @@
     "notifNewInvoiceDesc": "Notifications when new supplier invoices are received",
     "notifTransfer": "Completed transfers",
     "notifTransferDesc": "Alerts when a transfer is completed"
+  },
+  "batches": {
+    "settingsTitle": "Batches & Expiry",
+    "expiryAlertDays": "Expiry alert days",
+    "expiryAlertDaysHint": "Alerts will be shown for products expiring within this number of days",
+    "allowExpiredSale": "Allow sale of expired products",
+    "allowExpiredSaleHint": "When enabled, products past their expiry date can still be sold"
   }
 }

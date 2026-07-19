@@ -205,5 +205,12 @@
     "notifNewInvoiceDesc": "Notificaciones al recibir nuevas facturas de proveedores",
     "notifTransfer": "Transferencias completadas",
     "notifTransferDesc": "Avisos cuando se complete una transferencia"
+  },
+  "batches": {
+    "settingsTitle": "Lotes y Vencimiento",
+    "expiryAlertDays": "Días de alerta de vencimiento",
+    "expiryAlertDaysHint": "Se mostrarán alertas para los productos que vencen dentro de este número de días",
+    "allowExpiredSale": "Permitir venta de productos vencidos",
+    "allowExpiredSaleHint": "Si está activo, se podrán vender productos cuya fecha de vencimiento ya pasó"
   }
 }
