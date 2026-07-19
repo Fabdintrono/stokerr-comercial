@@ -110,6 +110,7 @@ export default function InvoicesPage() {
           quantity: item.quantity,
           unitPrice: item.unitPrice,
           vatRate: vatMap[item.vatRate] || 13,
+          ...(item.variantId ? { variantId: item.variantId } : {}),
         })),
       };
 
@@ -395,7 +396,7 @@ export default function InvoicesPage() {
         onOpenChange={setModalOpen}
         invoice={editingInvoice}
         suppliers={suppliers.map((s) => ({ id: s.id, name: s.name, nif: s.vatNumber || "" }))}
-        products={products.map((p) => ({ id: p.id, name: p.name, sku: (p as any).sku || "", unit: (p as any).unit || "" }))}
+        products={products.map((p) => ({ id: p.id, name: p.name, sku: (p as any).sku || "", unit: (p as any).unit || "", hasVariants: (p as any).hasVariants ?? false, costPrice: Number((p as any).costPrice ?? 0) }))}
         onSave={handleSave}
       />
     </div>

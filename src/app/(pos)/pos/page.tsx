@@ -9,14 +9,25 @@ import {
   Scissors, CreditCard, Percent, Printer, RefreshCw, Loader2, Check,
   Landmark, UtensilsCrossed, ChevronDown, FileText, History, Receipt,
 } from "lucide-react";
+import { variantDisplayName } from "@/lib/variants/displayName";
+import { effectivePrice } from "@/lib/variants/pricing";
 
 // ─── Types ───────────────────────────────────────────────────────────────────
+
+interface Variant {
+  id: string;
+  attributes: Record<string, string>;
+  sku?: string | null;
+  salePrice?: string | null;
+  costPrice?: string | null;
+}
 
 interface Product {
   id: string;
   name: string;
   salePrice: number;
   category: { id: string; name: string } | null;
+  hasVariants?: boolean;
 }
 
 interface Category {
@@ -33,6 +44,7 @@ interface DBTable {
 
 interface CartItem {
   productId: string;
+  variantId?: string;
   name: string;
   price: number;
   qty: number;
@@ -243,6 +255,13 @@ export default function StokerPOS() {
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [historyDetail, setHistoryDetail] = useState<PaidOrder | null>(null);
 
+  // Variant picker overlay
+  const [pendingProduct, setPendingProduct] = useState<Product | null>(null);
+  const [variants, setVariants] = useState<Variant[]>([]);
+  const [variantsLoading, setVariantsLoading] = useState(false);
+  const [selectedVariantId, setSelectedVariantId] = useState("");
+  const [showVariantPicker, setShowVariantPicker] = useState(false);
+
   // Split overlay
   const [splitMode, setSplitMode] = useState<SplitMode>("equal");
   const [splitN, setSplitN] = useState(2);
@@ -349,8 +368,20 @@ export default function StokerPOS() {
 
   // ── Cart actions ──
   const addProduct = (p: Product) => {
+    if (p.hasVariants) {
+      setPendingProduct(p);
+      setSelectedVariantId("");
+      setVariants([]);
+      setVariantsLoading(true);
+      setShowVariantPicker(true);
+      fetch(`/api/variants?productId=${p.id}`)
+        .then(r => r.json())
+        .then(d => { setVariants(d.variants ?? []); setVariantsLoading(false); })
+        .catch(() => setVariantsLoading(false));
+      return;
+    }
     setCart(prev => {
-      const idx = prev.findIndex(i => i.productId === p.id);
+      const idx = prev.findIndex(i => i.productId === p.id && !i.variantId);
       if (idx >= 0) {
         const next = [...prev];
         next[idx] = { ...next[idx], qty: next[idx].qty + 1 };
@@ -360,13 +391,35 @@ export default function StokerPOS() {
     });
   };
 
-  const changeQty = (productId: string, delta: number) => {
-    setCart(prev => prev.map(i => i.productId === productId ? { ...i, qty: i.qty + delta } : i)
-      .filter(i => i.qty > 0));
+  const confirmVariant = () => {
+    if (!pendingProduct || !selectedVariantId) return;
+    const variant = variants.find(v => v.id === selectedVariantId);
+    if (!variant) return;
+    const price = Number(effectivePrice(variant, { salePrice: String(pendingProduct.salePrice) }));
+    const label = `${pendingProduct.name} — ${variantDisplayName(variant.attributes)}${variant.sku ? ` (${variant.sku})` : ""}`;
+    setCart(prev => {
+      const idx = prev.findIndex(i => i.variantId === variant.id);
+      if (idx >= 0) {
+        const next = [...prev];
+        next[idx] = { ...next[idx], qty: next[idx].qty + 1 };
+        return next;
+      }
+      return [...prev, { productId: pendingProduct.id, variantId: variant.id, name: label, price, qty: 1 }];
+    });
+    setShowVariantPicker(false);
+    setPendingProduct(null);
+    setSelectedVariantId("");
+    setVariants([]);
   };
 
-  const removeItem = (productId: string) => {
-    setCart(prev => prev.filter(i => i.productId !== productId));
+  const changeQty = (productId: string, delta: number, variantId?: string) => {
+    setCart(prev => prev.map(i =>
+      i.productId === productId && i.variantId === variantId ? { ...i, qty: i.qty + delta } : i
+    ).filter(i => i.qty > 0));
+  };
+
+  const removeItem = (productId: string, variantId?: string) => {
+    setCart(prev => prev.filter(i => !(i.productId === productId && i.variantId === variantId)));
   };
 
   const clearCart = () => {
@@ -397,7 +450,7 @@ export default function StokerPOS() {
           tableId: selectedTable.id,
           userId: user.id,
           notes: orderNote || undefined,
-          items: cart.map(i => ({ productId: i.productId, quantity: i.qty, unitPrice: i.price })),
+          items: cart.map(i => ({ productId: i.productId, quantity: i.qty, unitPrice: i.price, ...(i.variantId ? { variantId: i.variantId } : {}) })),
         }),
       });
       if (!res.ok) { toast.error("Error al crear pedido"); return null; }
@@ -652,7 +705,9 @@ export default function StokerPOS() {
                 Sin productos
               </div>
             ) : filtered.map(p => {
-              const inCart = cart.find(i => i.productId === p.id);
+              const cartItems = cart.filter(i => i.productId === p.id);
+              const inCart = cartItems.length > 0;
+              const cartQty = cartItems.reduce((s, i) => s + i.qty, 0);
               return (
                 <button
                   key={p.id}
@@ -666,9 +721,11 @@ export default function StokerPOS() {
                 >
                   <span className="text-[10px] text-zinc-500">{p.category?.name || "General"}</span>
                   <span className="text-xs font-semibold text-white leading-tight line-clamp-2">{p.name}</span>
-                  <span className="text-sm font-bold text-emerald-400">{fmt(p.salePrice)}</span>
+                  <span className="text-sm font-bold text-emerald-400">
+                    {p.hasVariants ? "Variantes" : fmt(p.salePrice)}
+                  </span>
                   {inCart && (
-                    <span className="text-[10px] text-emerald-400/80 font-semibold">✓ ×{inCart.qty}</span>
+                    <span className="text-[10px] text-emerald-400/80 font-semibold">✓ ×{cartQty}</span>
                   )}
                 </button>
               );
@@ -728,21 +785,21 @@ export default function StokerPOS() {
                 </p>
               </div>
             ) : cart.map(item => (
-              <div key={item.productId} className="flex items-center gap-2 py-2.5 border-b border-zinc-800/60 last:border-0">
+              <div key={`${item.productId}:${item.variantId ?? ""}`} className="flex items-center gap-2 py-2.5 border-b border-zinc-800/60 last:border-0">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-semibold text-white truncate">{item.name}</p>
                   <p className="text-xs text-zinc-500">{fmt(item.price)} / ud.</p>
                 </div>
                 <div className="flex items-center gap-0.5">
                   <button
-                    onClick={() => changeQty(item.productId, -1)}
+                    onClick={() => changeQty(item.productId, -1, item.variantId)}
                     className="w-7 h-7 rounded-md bg-zinc-800 border border-zinc-700 text-white flex items-center justify-center hover:bg-red-900/50 hover:border-red-700 transition-all"
                   >
                     <Minus className="h-3 w-3" />
                   </button>
                   <span className="w-8 text-center text-sm font-bold">{item.qty}</span>
                   <button
-                    onClick={() => changeQty(item.productId, 1)}
+                    onClick={() => changeQty(item.productId, 1, item.variantId)}
                     className="w-7 h-7 rounded-md bg-zinc-800 border border-zinc-700 text-white flex items-center justify-center hover:bg-emerald-900/50 hover:border-emerald-700 transition-all"
                   >
                     <Plus className="h-3 w-3" />
@@ -750,7 +807,7 @@ export default function StokerPOS() {
                 </div>
                 <span className="text-sm font-bold text-white w-14 text-right">{fmt(item.price * item.qty)}</span>
                 <button
-                  onClick={() => removeItem(item.productId)}
+                  onClick={() => removeItem(item.productId, item.variantId)}
                   className="w-6 h-6 rounded text-zinc-600 hover:text-red-400 hover:bg-red-500/10 flex items-center justify-center transition-all"
                 >
                   <X className="h-3.5 w-3.5" />
@@ -864,6 +921,66 @@ export default function StokerPOS() {
       {/* ════════════════════════════════════════════
            OVERLAYS
       ════════════════════════════════════════════ */}
+
+      {/* ── VARIANT PICKER OVERLAY ── */}
+      {showVariantPicker && pendingProduct && (
+        <Overlay onClose={() => { setShowVariantPicker(false); setPendingProduct(null); setVariants([]); setSelectedVariantId(""); }}>
+          <div className="bg-zinc-900 border border-zinc-700 rounded-2xl w-[420px]">
+            <OverlayHeader
+              title={pendingProduct.name}
+              sub="Seleccionar variante"
+              onClose={() => { setShowVariantPicker(false); setPendingProduct(null); setVariants([]); setSelectedVariantId(""); }}
+            />
+            <div className="px-5 py-4 space-y-3">
+              {variantsLoading ? (
+                <div className="flex items-center justify-center py-6">
+                  <Loader2 className="h-6 w-6 animate-spin text-emerald-400" />
+                </div>
+              ) : variants.length === 0 ? (
+                <div className="text-sm text-zinc-500 text-center py-4">Sin variantes disponibles</div>
+              ) : (
+                <div className="space-y-2">
+                  {variants.map(v => {
+                    const price = Number(effectivePrice(v, { salePrice: String(pendingProduct.salePrice) }));
+                    const label = variantDisplayName(v.attributes) + (v.sku ? ` · ${v.sku}` : "");
+                    return (
+                      <button
+                        key={v.id}
+                        onClick={() => setSelectedVariantId(v.id)}
+                        className={cn(
+                          "w-full flex items-center justify-between px-4 py-3 rounded-xl border-2 text-left transition-all",
+                          selectedVariantId === v.id
+                            ? "bg-emerald-500/10 border-emerald-500 text-emerald-400"
+                            : "bg-zinc-800 border-zinc-700 text-zinc-300 hover:border-zinc-500"
+                        )}
+                      >
+                        <span className="text-sm font-semibold">{label}</span>
+                        <span className="text-sm font-bold text-emerald-400">{fmt(price)}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+            <div className="flex gap-2 px-5 pb-5">
+              <button
+                onClick={() => { setShowVariantPicker(false); setPendingProduct(null); setVariants([]); setSelectedVariantId(""); }}
+                className="flex-1 py-3 rounded-xl bg-zinc-800 border border-zinc-700 text-sm font-semibold text-zinc-400 hover:text-white transition-all"
+              >
+                Cancelar
+              </button>
+              <button
+                disabled={!selectedVariantId}
+                onClick={confirmVariant}
+                className="flex-[2] py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 border border-emerald-500 text-white font-bold text-sm transition-all disabled:opacity-40 flex items-center justify-center gap-2"
+              >
+                <Check className="h-4 w-4" />
+                Agregar al pedido
+              </button>
+            </div>
+          </div>
+        </Overlay>
+      )}
 
       {/* ── TABLES OVERLAY ── */}
       {showTables && (

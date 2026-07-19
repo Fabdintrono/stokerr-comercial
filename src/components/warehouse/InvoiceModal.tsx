@@ -17,14 +17,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { variantDisplayName } from "@/lib/variants/displayName";
+import { effectiveCost } from "@/lib/variants/pricing";
+
+interface Variant {
+  id: string;
+  attributes: Record<string, string>;
+  sku?: string | null;
+  costPrice?: string | null;
+  salePrice?: string | null;
+}
 
 interface Product {
   id: string;
   name: string;
   sku: string;
   unit: string;
+  hasVariants?: boolean;
+  costPrice?: number;
 }
 
 interface Supplier {
@@ -36,6 +48,7 @@ interface Supplier {
 interface InvoiceItem {
   productId: string;
   productName: string;
+  variantId?: string;
   quantity: number;
   unitPrice: number;
   vatRate: string;
@@ -86,6 +99,13 @@ export function InvoiceModal({
     items: [],
   });
 
+  // Variant picker state: maps item index → { variants, loading, selectedId }
+  const [variantState, setVariantState] = useState<Record<number, {
+    variants: Variant[];
+    loading: boolean;
+    selectedId: string;
+  }>>({});
+
   useEffect(() => {
     if (invoice) {
       setFormData(invoice);
@@ -96,6 +116,7 @@ export function InvoiceModal({
         items: [],
       });
     }
+    setVariantState({});
   }, [invoice, open]);
 
   const calculateTotals = (items: InvoiceItem[]) => {
@@ -126,6 +147,15 @@ export function InvoiceModal({
       ...prev,
       items: (prev.items || []).filter((_, i) => i !== index),
     }));
+    setVariantState(vs => {
+      const next: typeof vs = {};
+      Object.entries(vs).forEach(([k, v]) => {
+        const ki = parseInt(k);
+        if (ki < index) next[ki] = v;
+        else if (ki > index) next[ki - 1] = v;
+      });
+      return next;
+    });
   };
 
   const handleItemChange = (
@@ -141,6 +171,32 @@ export function InvoiceModal({
         const product = products.find((p) => p.id === value);
         item.productId = value as string;
         item.productName = product?.name || "";
+        item.variantId = undefined;
+
+        if (product?.hasVariants) {
+          // Trigger variant fetch for this item index
+          setVariantState(vs => ({
+            ...vs,
+            [index]: { variants: [], loading: true, selectedId: "" },
+          }));
+          fetch(`/api/variants?productId=${product.id}`)
+            .then(r => r.json())
+            .then(d => setVariantState(vs => ({
+              ...vs,
+              [index]: { variants: d.variants ?? [], loading: false, selectedId: "" },
+            })))
+            .catch(() => setVariantState(vs => ({
+              ...vs,
+              [index]: { variants: [], loading: false, selectedId: "" },
+            })));
+        } else {
+          // Clear variant state for this index
+          setVariantState(vs => { const next = { ...vs }; delete next[index]; return next; });
+          // Use cost price as default unit price for purchase invoice
+          if (product?.costPrice != null && product.costPrice > 0) {
+            item.unitPrice = product.costPrice;
+          }
+        }
       } else if (field === "quantity" || field === "unitPrice") {
         item[field] = value as number;
       } else if (field === "vatRate") {
@@ -165,10 +221,45 @@ export function InvoiceModal({
     });
   };
 
+  const confirmVariantForItem = (index: number) => {
+    const vs = variantState[index];
+    if (!vs?.selectedId) return;
+    const variant = vs.variants.find(v => v.id === vs.selectedId);
+    if (!variant) return;
+    const product = products.find(p => {
+      const items = formData.items || [];
+      return p.id === items[index]?.productId;
+    });
+    const costStr = effectiveCost(variant, { costPrice: String(product?.costPrice ?? 0) });
+    const cost = Number(costStr);
+    const label = variantDisplayName(variant.attributes) + (variant.sku ? ` (${variant.sku})` : "");
+
+    setFormData((prev) => {
+      const items = [...(prev.items || [])];
+      const item = { ...items[index] };
+      item.variantId = variant.id;
+      item.productName = `${item.productName} — ${label}`;
+      if (cost > 0) item.unitPrice = cost;
+      const vatMultiplier = VAT_RATES.find(r => r.value === item.vatRate)?.multiplier || 0.13;
+      const netAmount = item.quantity * item.unitPrice;
+      item.vatAmount = netAmount * vatMultiplier;
+      item.total = netAmount + item.vatAmount;
+      items[index] = item;
+      const totals = calculateTotals(items);
+      return { ...prev, items, ...totals };
+    });
+    // Remove from pending variant state
+    setVariantState(vs2 => { const next = { ...vs2 }; delete next[index]; return next; });
+  };
+
   const handleSubmit = () => {
     const supplier = suppliers.find((s) => s.id === formData.supplierId);
     onSave({
       ...formData,
+      items: (formData.items || []).map(item => ({
+        ...item,
+        ...(item.variantId ? { variantId: item.variantId } : {}),
+      })),
       supplier: supplier?.name,
     });
   };
@@ -271,11 +362,64 @@ export function InvoiceModal({
                               value={product.id}
                               className="text-white hover:bg-zinc-700"
                             >
-                              {product.name} ({product.sku})
+                              {product.name} ({product.sku}){product.hasVariants ? " ✦" : ""}
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
+                      {/* Variant picker for this item */}
+                      {variantState[index] && (
+                        <div className={cn(
+                          "mt-2 p-3 rounded-lg border space-y-2",
+                          item.variantId
+                            ? "border-emerald-600/40 bg-emerald-950/20"
+                            : "border-amber-600/40 bg-amber-950/20"
+                        )}>
+                          <Label className="text-xs text-zinc-400">Seleccionar variante</Label>
+                          {variantState[index].loading ? (
+                            <div className="flex items-center gap-2 text-xs text-zinc-400">
+                              <Loader2 className="h-3 w-3 animate-spin" /> Cargando variantes…
+                            </div>
+                          ) : (
+                            <div className="flex gap-2 items-center">
+                              <Select
+                                value={variantState[index].selectedId}
+                                onValueChange={(val) =>
+                                  setVariantState(vs => ({
+                                    ...vs,
+                                    [index]: { ...vs[index], selectedId: val },
+                                  }))
+                                }
+                              >
+                                <SelectTrigger className="bg-zinc-800 border-zinc-700 flex-1">
+                                  <SelectValue placeholder="Elige variante…" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-zinc-800 border-zinc-700">
+                                  {variantState[index].variants.map(v => {
+                                    const product = products.find(p => p.id === item.productId);
+                                    const cost = Number(effectiveCost(v, { costPrice: String(product?.costPrice ?? 0) }));
+                                    const label = variantDisplayName(v.attributes) + (v.sku ? ` · ${v.sku}` : "") + (cost > 0 ? ` — ${cost.toFixed(2)}€` : "");
+                                    return (
+                                      <SelectItem key={v.id} value={v.id} className="text-white hover:bg-zinc-700">
+                                        {label}
+                                      </SelectItem>
+                                    );
+                                  })}
+                                </SelectContent>
+                              </Select>
+                              <Button
+                                type="button"
+                                size="sm"
+                                disabled={!variantState[index]?.selectedId}
+                                onClick={() => confirmVariantForItem(index)}
+                                className="bg-emerald-600 hover:bg-emerald-500 text-white disabled:opacity-40"
+                              >
+                                OK
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
 
                     <div className="col-span-4 md:col-span-2 space-y-2">
