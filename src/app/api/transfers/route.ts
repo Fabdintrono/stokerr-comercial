@@ -10,6 +10,7 @@ const createTransferSchema = z.object({
   notes: z.string().optional(),
   items: z.array(z.object({
     productId: z.string(),
+    variantId: z.string().optional(),
     quantity: z.number().positive(),
   })).min(1),
 });
@@ -114,6 +115,7 @@ export async function POST(request: NextRequest) {
           lineItems: {
             create: data.items.map((item) => ({
               productId: item.productId,
+              variantId: item.variantId,
               quantity: item.quantity,
             })),
           },

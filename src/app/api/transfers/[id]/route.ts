@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { getServerSession } from 'next-auth';
 import { prisma } from '@/lib/prisma';
 import { authOptions } from '@/lib/auth';
+import { adjustStock } from '@/lib/inventory/adjustStock';
 
 // PATCH /api/transfers/[id] — accept or reject (by destination location)
 export async function PATCH(
@@ -54,64 +55,22 @@ export async function PATCH(
       await tx.transfer.update({ where: { id }, data: { status: 'COMPLETED' } });
 
       for (const item of transfer.lineItems) {
-        // Deduct from warehouse (fromLocation)
-        const fromInv = await tx.inventory.findUnique({
-          where: { productId_locationId: { productId: item.productId, locationId: transfer.fromLocationId } },
+        await adjustStock(tx, {
+          productId: item.productId,
+          variantId: item.variantId ?? null,
+          locationId: transfer.fromLocationId,
+          delta: -item.quantity,
+          type: 'TRANSFER',
+          userId: session.user.id,
         });
-        if (fromInv) {
-          await tx.inventory.update({
-            where: { id: fromInv.id },
-            data: { quantity: Math.max(0, fromInv.quantity - item.quantity) },
-          });
-          await tx.inventoryMovement.create({
-            data: {
-              productId: item.productId,
-              locationId: transfer.fromLocationId,
-              inventoryId: fromInv.id,
-              type: 'OUT',
-              quantity: item.quantity,
-              reason: `Transferencia ${transfer.reference} enviada a ${transfer.toLocation.name}`,
-              userId: session.user.id,
-            },
-          });
-        }
-
-        // Add to restaurant (toLocation)
-        const toInv = await tx.inventory.findUnique({
-          where: { productId_locationId: { productId: item.productId, locationId: transfer.toLocationId } },
+        await adjustStock(tx, {
+          productId: item.productId,
+          variantId: item.variantId ?? null,
+          locationId: transfer.toLocationId,
+          delta: item.quantity,
+          type: 'IN',
+          userId: session.user.id,
         });
-        if (toInv) {
-          await tx.inventory.update({
-            where: { id: toInv.id },
-            data: { quantity: toInv.quantity + item.quantity },
-          });
-          await tx.inventoryMovement.create({
-            data: {
-              productId: item.productId,
-              locationId: transfer.toLocationId,
-              inventoryId: toInv.id,
-              type: 'IN',
-              quantity: item.quantity,
-              reason: `Transferencia ${transfer.reference} recibida de ${transfer.fromLocation.name}`,
-              userId: session.user.id,
-            },
-          });
-        } else {
-          const newInv = await tx.inventory.create({
-            data: { productId: item.productId, locationId: transfer.toLocationId, quantity: item.quantity },
-          });
-          await tx.inventoryMovement.create({
-            data: {
-              productId: item.productId,
-              locationId: transfer.toLocationId,
-              inventoryId: newInv.id,
-              type: 'IN',
-              quantity: item.quantity,
-              reason: `Transferencia ${transfer.reference} recibida de ${transfer.fromLocation.name}`,
-              userId: session.user.id,
-            },
-          });
-        }
       }
 
       // Mark transfer notification as read
